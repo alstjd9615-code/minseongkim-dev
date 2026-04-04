@@ -89,14 +89,19 @@ def handler(event: dict[str, Any], context: Any) -> dict[str, Any]:  # noqa: ARG
             return _response(400, {"message": "Invalid JSON body"})
 
         sections = body.get("sections")
-        if not isinstance(sections, list):
+        is_public = body.get("isPublic")
+
+        if sections is not None and not isinstance(sections, list):
             return _response(400, {"message": "'sections' must be a list"})
 
         portfolio = _get_portfolio_by_session(session_id)
         if not portfolio:
             return _response(404, {"message": "Portfolio not found"})
 
-        portfolio["sections"] = sections
+        if sections is not None:
+            portfolio["sections"] = sections
+        if is_public is not None:
+            portfolio["isPublic"] = bool(is_public)
         portfolio["updatedAt"] = _now_iso()
 
         table = dynamodb.Table(PORTFOLIOS_TABLE)
