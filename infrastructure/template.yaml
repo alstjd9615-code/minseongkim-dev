@@ -9,7 +9,7 @@ Description: >
 # ---------------------------------------------------------------------------
 Globals:
   Function:
-    Runtime: python3.12
+    Runtime: python3.14
     Handler: handler.handler
     Timeout: 60
     MemorySize: 256
@@ -53,10 +53,10 @@ Resources:
       Description: Shared Python dependencies (boto3)
       ContentUri: ../backend/
       CompatibleRuntimes:
-        - python3.12
+        - python3.14
       RetentionPolicy: Delete
     Metadata:
-      BuildMethod: python3.12
+      BuildMethod: python3.14
 
   # ── DynamoDB Tables ──────────────────────────────────────────────────────
   SessionsTable:
