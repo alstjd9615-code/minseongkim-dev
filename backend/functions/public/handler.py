@@ -23,7 +23,7 @@ PORTFOLIOS_TABLE = os.environ.get("PORTFOLIOS_TABLE", "portfolio-data")
 
 def _cors_headers() -> dict[str, str]:
     return {
-        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Origin": os.environ.get("CORS_ORIGIN", "*"),
         "Access-Control-Allow-Headers": "Content-Type",
         "Access-Control-Allow-Methods": "GET,OPTIONS",
     }

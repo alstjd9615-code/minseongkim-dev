@@ -29,5 +29,5 @@ export async function getIdToken(): Promise<string | null> {
 export async function authHeaders(): Promise<Record<string, string>> {
   const token = await getIdToken();
   if (!token) return {};
-  return { Authorization: token };
+  return { Authorization: `Bearer ${token}` };
 }

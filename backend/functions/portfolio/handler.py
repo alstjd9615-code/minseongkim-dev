@@ -93,6 +93,8 @@ def handler(event: dict[str, Any], context: Any) -> dict[str, Any]:  # noqa: ARG
 
         if sections is not None and not isinstance(sections, list):
             return _response(400, {"message": "'sections' must be a list"})
+        if is_public is not None and not isinstance(is_public, bool):
+            return _response(400, {"message": "'isPublic' must be a boolean"})
 
         portfolio = _get_portfolio_by_session(session_id)
         if not portfolio:

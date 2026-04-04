@@ -33,8 +33,12 @@ export function ActivityHeatmap({ data }: ActivityHeatmapProps) {
         ))}
       </div>
       <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 8, fontSize: 11, color: 'var(--text)', opacity: 0.6 }}>
-        <span>{data[0]?.date ?? ''}</span>
-        <span>{data[data.length - 1]?.date ?? ''}</span>
+        {data.length > 0 && (
+          <>
+            <span>{data[0].date}</span>
+            <span>{data[data.length - 1].date}</span>
+          </>
+        )}
       </div>
     </div>
   );

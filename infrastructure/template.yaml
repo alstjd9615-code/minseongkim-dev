@@ -27,7 +27,7 @@ Globals:
         MAX_TOKENS: "4096"
   Api:
     Cors:
-      AllowMethods: "'GET,POST,PUT,DELETE,OPTIONS'"
+      AllowMethods: "'GET,POST,PUT,OPTIONS'"
       AllowHeaders: "'Content-Type,Authorization'"
       AllowOrigin: !Sub "'${AllowedOrigin}'"
 
@@ -104,7 +104,6 @@ Resources:
       ExplicitAuthFlows:
         - ALLOW_USER_SRP_AUTH
         - ALLOW_REFRESH_TOKEN_AUTH
-        - ALLOW_USER_PASSWORD_AUTH
       PreventUserExistenceErrors: ENABLED
       TokenValidityUnits:
         AccessToken: hours
