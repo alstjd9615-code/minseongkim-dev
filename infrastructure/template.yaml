@@ -20,7 +20,7 @@ Globals:
         AWS_ACCOUNT_ID: !Ref AWS::AccountId
         SESSIONS_TABLE: !Ref SessionsTable
         PORTFOLIOS_TABLE: !Ref PortfoliosTable
-        CORS_ORIGIN: !Sub "https://${CloudFrontDistribution.DomainName}"
+        CORS_ORIGIN: !Ref AllowedOrigin
         BEDROCK_REGION: !Ref AWS::Region
         BEDROCK_MODEL_ID: "anthropic.claude-3-5-sonnet-20240620-v1:0"
         MAX_TOKENS: "4096"
@@ -28,7 +28,7 @@ Globals:
     Cors:
       AllowMethods: "'GET,POST,PUT,OPTIONS'"
       AllowHeaders: "'Content-Type,Authorization'"
-      AllowOrigin: !Sub "'https://${CloudFrontDistribution.DomainName}'"
+      AllowOrigin: !Sub "'${AllowedOrigin}'"
 
 # ---------------------------------------------------------------------------
 # Parameters
@@ -39,6 +39,31 @@ Parameters:
     Default: dev
     AllowedValues: [dev, staging, prod]
     Description: Deployment environment
+
+  AllowedOrigin:
+    Type: String
+    Default: "*"
+    Description: >
+      Allowed CORS origin for API Gateway and Lambda.
+      On initial deploy, keep the default '*'.
+      After the CloudFront distribution is created, update this parameter
+      to 'https://<distribution-domain>.cloudfront.net' to restrict CORS.
+
+  ApiDomainName:
+    Type: String
+    Default: ""
+    Description: >
+      API Gateway domain name for the CloudFront API origin.
+      Leave empty on the FIRST deployment (CloudFront will serve S3 only).
+      After the first deployment, copy the value from the ApiUrl output
+      (e.g. abc123.execute-api.ap-northeast-2.amazonaws.com) and redeploy
+      to enable CloudFront → API Gateway proxying.
+
+# ---------------------------------------------------------------------------
+# Conditions
+# ---------------------------------------------------------------------------
+Conditions:
+  HasApiDomainName: !Not [!Equals [!Ref ApiDomainName, ""]]
 
 # ---------------------------------------------------------------------------
 # Resources
@@ -263,23 +288,29 @@ Resources:
             S3OriginConfig:
               OriginAccessIdentity: ""
             OriginAccessControlId: !GetAtt CloudFrontOAC.Id
-          - Id: ApiOrigin
-            DomainName: !Sub "${PortfolioApi}.execute-api.${AWS::Region}.amazonaws.com"
-            CustomOriginConfig:
-              HTTPSPort: 443
-              OriginProtocolPolicy: https-only
+          - !If
+            - HasApiDomainName
+            - Id: ApiOrigin
+              DomainName: !Ref ApiDomainName
+              CustomOriginConfig:
+                HTTPSPort: 443
+                OriginProtocolPolicy: https-only
+            - !Ref AWS::NoValue
         DefaultCacheBehavior:
           TargetOriginId: S3Origin
           ViewerProtocolPolicy: redirect-to-https
           CachePolicyId: 658327ea-f89d-4fab-a63d-7e88639e58f6  # CachingOptimized
           Compress: true
         CacheBehaviors:
-          - PathPattern: !Sub "/${Environment}/*"
-            TargetOriginId: ApiOrigin
-            ViewerProtocolPolicy: https-only
-            CachePolicyId: 4135ea2d-6df8-44a3-9df3-4b5a84be39ad  # CachingDisabled
-            AllowedMethods: [GET, HEAD, OPTIONS, PUT, POST, PATCH, DELETE]
-            OriginRequestPolicyId: b689b0a8-53d0-40ab-baf2-68738e2966ac  # AllViewerExceptHostHeader
+          - !If
+            - HasApiDomainName
+            - PathPattern: !Sub "/${Environment}/*"
+              TargetOriginId: ApiOrigin
+              ViewerProtocolPolicy: https-only
+              CachePolicyId: 4135ea2d-6df8-44a3-9df3-4b5a84be39ad  # CachingDisabled
+              AllowedMethods: [GET, HEAD, OPTIONS, PUT, POST, PATCH, DELETE]
+              OriginRequestPolicyId: b689b0a8-53d0-40ab-baf2-68738e2966ac  # AllViewerExceptHostHeader
+            - !Ref AWS::NoValue
         CustomErrorResponses:
           - ErrorCode: 403
             ResponseCode: 200
@@ -300,6 +331,14 @@ Outputs:
     Value: !Sub "https://${PortfolioApi}.execute-api.${AWS::Region}.amazonaws.com/${Environment}"
     Export:
       Name: !Sub "${AWS::StackName}-ApiUrl"
+
+  ApiDomainName:
+    Description: >
+      API Gateway domain name – use this value for the ApiDomainName parameter
+      on the second deployment to enable CloudFront → API proxying.
+    Value: !Sub "${PortfolioApi}.execute-api.${AWS::Region}.amazonaws.com"
+    Export:
+      Name: !Sub "${AWS::StackName}-ApiDomainName"
 
   CloudFrontUrl:
     Description: "CloudFront distribution URL"
