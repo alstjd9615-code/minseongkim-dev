@@ -9,7 +9,7 @@ Description: >
 # ---------------------------------------------------------------------------
 Globals:
   Function:
-    Runtime: python3.12
+    Runtime: python3.14
     Handler: handler.handler
     Timeout: 60
     MemorySize: 256
@@ -20,7 +20,7 @@ Globals:
         AWS_ACCOUNT_ID: !Ref AWS::AccountId
         SESSIONS_TABLE: !Ref SessionsTable
         PORTFOLIOS_TABLE: !Ref PortfoliosTable
-        CORS_ORIGIN: !Sub "https://${CloudFrontDistribution.DomainName}"
+        CORS_ORIGIN: !Ref AllowedOrigin
         BEDROCK_REGION: !Ref AWS::Region
         BEDROCK_MODEL_ID: "anthropic.claude-3-5-sonnet-20240620-v1:0"
         MAX_TOKENS: "4096"
@@ -28,7 +28,7 @@ Globals:
     Cors:
       AllowMethods: "'GET,POST,PUT,OPTIONS'"
       AllowHeaders: "'Content-Type,Authorization'"
-      AllowOrigin: !Sub "'https://${CloudFrontDistribution.DomainName}'"
+      AllowOrigin: !Sub "'${AllowedOrigin}'"
 
 # ---------------------------------------------------------------------------
 # Parameters
@@ -39,6 +39,15 @@ Parameters:
     Default: dev
     AllowedValues: [dev, staging, prod]
     Description: Deployment environment
+
+  AllowedOrigin:
+    Type: String
+    Default: "*"
+    Description: >
+      Allowed CORS origin for API Gateway and Lambda.
+      On initial deploy, keep the default '*'.
+      After the CloudFront distribution is created, update this parameter
+      to 'https://<distribution-domain>.cloudfront.net' to restrict CORS.
 
 # ---------------------------------------------------------------------------
 # Resources
@@ -53,10 +62,10 @@ Resources:
       Description: Shared Python dependencies (boto3)
       ContentUri: ../backend/
       CompatibleRuntimes:
-        - python3.12
+        - python3.14
       RetentionPolicy: Delete
     Metadata:
-      BuildMethod: python3.12
+      BuildMethod: python3.14
 
   # ── DynamoDB Tables ──────────────────────────────────────────────────────
   SessionsTable:
