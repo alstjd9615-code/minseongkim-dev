@@ -6,9 +6,10 @@ import { ChatInterface } from './components/Chat/ChatInterface';
 import { PortfolioView } from './components/Portfolio/PortfolioView';
 import { DiaryList } from './components/Diary/DiaryList';
 import { Dashboard } from './components/Dashboard/Dashboard';
+import { BlogList } from './components/Blog/BlogList';
 import './App.css';
 
-type Tab = 'portfolio' | 'diary' | 'dashboard';
+type Tab = 'portfolio' | 'diary' | 'dashboard' | 'blog';
 
 function AppContent() {
   const { session, portfolio, isLoading, error, send, reset } = useChat();
@@ -38,6 +39,12 @@ function AppContent() {
             onClick={() => setActiveTab('dashboard')}
           >
             📊 대시보드
+          </button>
+          <button
+            className={`appTab ${activeTab === 'blog' ? 'appTabActive' : ''}`}
+            onClick={() => setActiveTab('blog')}
+          >
+            ✍️ 블로그
           </button>
         </nav>
         <div className="appUserArea">
@@ -74,6 +81,12 @@ function AppContent() {
         {activeTab === 'dashboard' && (
           <div className="fullPane">
             <Dashboard />
+          </div>
+        )}
+
+        {activeTab === 'blog' && (
+          <div className="fullPane">
+            <BlogList />
           </div>
         )}
       </main>

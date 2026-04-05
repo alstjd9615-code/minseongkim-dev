@@ -21,6 +21,7 @@ Globals:
         SESSIONS_TABLE: !Ref SessionsTable
         PORTFOLIOS_TABLE: !Ref PortfoliosTable
         DIARY_TABLE: !Ref DiaryTable
+        BLOG_TABLE: !Ref BlogTable
         CORS_ORIGIN: !Ref AllowedOrigin
         BEDROCK_REGION: !Ref AWS::Region
         BEDROCK_MODEL_ID: "anthropic.claude-3-5-sonnet-20240620-v1:0"
@@ -175,6 +176,39 @@ Resources:
         - Key: Environment
           Value: !Ref Environment
 
+  BlogTable:
+    Type: AWS::DynamoDB::Table
+    DeletionPolicy: Retain
+    Properties:
+      TableName: !Sub "portfolio-blog-${Environment}"
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: userId
+          AttributeType: S
+        - AttributeName: postId
+          AttributeType: S
+        - AttributeName: status
+          AttributeType: S
+        - AttributeName: publishedAt
+          AttributeType: S
+      KeySchema:
+        - AttributeName: userId
+          KeyType: HASH
+        - AttributeName: postId
+          KeyType: RANGE
+      GlobalSecondaryIndexes:
+        - IndexName: status-publishedAt-index
+          KeySchema:
+            - AttributeName: status
+              KeyType: HASH
+            - AttributeName: publishedAt
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+      Tags:
+        - Key: Environment
+          Value: !Ref Environment
+
   DiaryTable:
     Type: AWS::DynamoDB::Table
     DeletionPolicy: Retain
@@ -241,6 +275,8 @@ Resources:
                   - !Sub "${PortfoliosTable.Arn}/index/*"
                   - !GetAtt DiaryTable.Arn
                   - !Sub "${DiaryTable.Arn}/index/*"
+                  - !GetAtt BlogTable.Arn
+                  - !Sub "${BlogTable.Arn}/index/*"
         - PolicyName: BedrockAccess
           PolicyDocument:
             Version: '2012-10-17'
@@ -389,6 +425,137 @@ Resources:
           Properties:
             RestApiId: !Ref PortfolioApi
             Path: /public/{portfolioId}
+            Method: OPTIONS
+            Auth:
+              Authorizer: NONE
+
+  BlogFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "portfolio-blog-${Environment}"
+      CodeUri: ../backend/functions/blog/
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Description: "Blog post CRUD with AI generation from diary entries"
+      Events:
+        BlogPost:
+          Type: Api
+          Properties:
+            RestApiId: !Ref PortfolioApi
+            Path: /blog
+            Method: POST
+            Auth:
+              Authorizer: CognitoAuthorizer
+        BlogGetList:
+          Type: Api
+          Properties:
+            RestApiId: !Ref PortfolioApi
+            Path: /blog
+            Method: GET
+            Auth:
+              Authorizer: CognitoAuthorizer
+        BlogGetItem:
+          Type: Api
+          Properties:
+            RestApiId: !Ref PortfolioApi
+            Path: /blog/{postId}
+            Method: GET
+            Auth:
+              Authorizer: CognitoAuthorizer
+        BlogPut:
+          Type: Api
+          Properties:
+            RestApiId: !Ref PortfolioApi
+            Path: /blog/{postId}
+            Method: PUT
+            Auth:
+              Authorizer: CognitoAuthorizer
+        BlogDelete:
+          Type: Api
+          Properties:
+            RestApiId: !Ref PortfolioApi
+            Path: /blog/{postId}
+            Method: DELETE
+            Auth:
+              Authorizer: CognitoAuthorizer
+        BlogOptions:
+          Type: Api
+          Properties:
+            RestApiId: !Ref PortfolioApi
+            Path: /blog
+            Method: OPTIONS
+            Auth:
+              Authorizer: NONE
+        BlogItemOptions:
+          Type: Api
+          Properties:
+            RestApiId: !Ref PortfolioApi
+            Path: /blog/{postId}
+            Method: OPTIONS
+            Auth:
+              Authorizer: NONE
+
+  PublicBlogFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "portfolio-public-blog-${Environment}"
+      CodeUri: ../backend/functions/public_blog/
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Description: "Public blog access (no auth required)"
+      Events:
+        PublicBlogGetList:
+          Type: Api
+          Properties:
+            RestApiId: !Ref PortfolioApi
+            Path: /public/blog/{userId}
+            Method: GET
+            Auth:
+              Authorizer: NONE
+        PublicBlogGetItem:
+          Type: Api
+          Properties:
+            RestApiId: !Ref PortfolioApi
+            Path: /public/blog/{userId}/{postId}
+            Method: GET
+            Auth:
+              Authorizer: NONE
+        PublicBlogListOptions:
+          Type: Api
+          Properties:
+            RestApiId: !Ref PortfolioApi
+            Path: /public/blog/{userId}
+            Method: OPTIONS
+            Auth:
+              Authorizer: NONE
+        PublicBlogItemOptions:
+          Type: Api
+          Properties:
+            RestApiId: !Ref PortfolioApi
+            Path: /public/blog/{userId}/{postId}
+            Method: OPTIONS
+            Auth:
+              Authorizer: NONE
+
+  BlogPublishFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "portfolio-blog-publish-${Environment}"
+      CodeUri: ../backend/functions/blog_publish/
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Description: "Blog post publishing to external platforms (Medium, Tistory)"
+      Events:
+        BlogPublishPost:
+          Type: Api
+          Properties:
+            RestApiId: !Ref PortfolioApi
+            Path: /blog/{postId}/publish/{platform}
+            Method: POST
+            Auth:
+              Authorizer: CognitoAuthorizer
+        BlogPublishOptions:
+          Type: Api
+          Properties:
+            RestApiId: !Ref PortfolioApi
+            Path: /blog/{postId}/publish/{platform}
             Method: OPTIONS
             Auth:
               Authorizer: NONE
@@ -549,6 +716,12 @@ Outputs:
     Value: !Ref DiaryTable
     Export:
       Name: !Sub "${AWS::StackName}-DiaryTable"
+
+  BlogTableName:
+    Description: "DynamoDB blog table name"
+    Value: !Ref BlogTable
+    Export:
+      Name: !Sub "${AWS::StackName}-BlogTable"
 
   UserPoolId:
     Description: "Cognito User Pool ID"
