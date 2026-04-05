@@ -1,7 +1,7 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
 Description: >
-  AI Portfolio Builder – AWS Serverless stack
+  AI Portfolio Builder - AWS Serverless stack
   (API Gateway + Lambda + Bedrock + DynamoDB + S3 + CloudFront)
 
 # ---------------------------------------------------------------------------
@@ -277,7 +277,7 @@ Resources:
     Type: AWS::CloudFront::Distribution
     Properties:
       DistributionConfig:
-        Comment: !Sub "AI Portfolio Builder – ${Environment}"
+        Comment: !Sub "AI Portfolio Builder - ${Environment}"
         Enabled: true
         DefaultRootObject: index.html
         HttpVersion: http2
@@ -334,7 +334,7 @@ Outputs:
 
   ApiDomainName:
     Description: >
-      API Gateway domain name – use this value for the ApiDomainName parameter
+      API Gateway domain name - use this value for the ApiDomainName parameter
       on the second deployment to enable CloudFront → API proxying.
     Value: !Sub "${PortfolioApi}.execute-api.${AWS::Region}.amazonaws.com"
     Export:
