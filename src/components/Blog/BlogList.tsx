@@ -199,8 +199,8 @@ function PostCard({ post, onEdit, onPreview, onPublish, onUnpublish, onDelete }:
       {post.excerpt && <p className={styles.postExcerpt}>{post.excerpt}</p>}
       {post.tags.length > 0 && (
         <div className={styles.postTags}>
-          {post.tags.map(tag => (
-            <span key={tag} className={styles.tag}>#{tag}</span>
+          {post.tags.map((tag, index) => (
+            <span key={`${tag}-${index}`} className={styles.tag}>#{tag}</span>
           ))}
         </div>
       )}
