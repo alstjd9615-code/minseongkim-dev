@@ -72,7 +72,50 @@ export interface DiaryListResponse {
   count: number;
 }
 
-// ── Stats types ──────────────────────────────────────────────────────────────
+// ── Blog types ────────────────────────────────────────────────────────────────
+
+export type BlogStatus = 'draft' | 'published';
+
+export interface BlogPost {
+  userId: string;
+  postId: string;
+  title: string;
+  content: string;
+  excerpt: string;
+  tags: string[];
+  status: BlogStatus;
+  sourceEntryIds: string[];
+  createdAt: string;
+  updatedAt: string;
+  publishedAt?: string;
+  mediumUrl?: string;
+  tistoryUrl?: string;
+}
+
+export type BlogPostSummary = Omit<BlogPost, 'content'>;
+
+export interface CreateBlogRequest {
+  entryIds: string[];
+}
+
+export interface UpdateBlogRequest {
+  title?: string;
+  content?: string;
+  excerpt?: string;
+  tags?: string[];
+  status?: BlogStatus;
+}
+
+export interface BlogListResponse {
+  posts: BlogPost[];
+  count: number;
+}
+
+export interface PublicBlogListResponse {
+  posts: BlogPostSummary[];
+  count: number;
+}
+
 
 export interface CategoryStat {
   category: DiaryCategory;
