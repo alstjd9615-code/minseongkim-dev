@@ -190,12 +190,29 @@ def handler(event: dict[str, Any], context: Any) -> dict[str, Any]:  # noqa: ARG
             kwargs: dict[str, Any] = {
                 "KeyConditionExpression": boto3.dynamodb.conditions.Key("userId").eq(user_id),
                 "ScanIndexForward": False,
-                "Limit": limit,
             }
             if status_filter in ("draft", "published"):
                 kwargs["FilterExpression"] = boto3.dynamodb.conditions.Attr("status").eq(status_filter)
-            result = blog_table.query(**kwargs)
-            items = result.get("Items", [])
+                kwargs["Limit"] = limit
+
+                items: list[dict[str, Any]] = []
+                exclusive_start_key: dict[str, Any] | None = None
+                while len(items) < limit:
+                    page_kwargs = dict(kwargs)
+                    if exclusive_start_key:
+                        page_kwargs["ExclusiveStartKey"] = exclusive_start_key
+                    result = blog_table.query(**page_kwargs)
+                    items.extend(result.get("Items", []))
+                    if len(items) >= limit:
+                        items = items[:limit]
+                        break
+                    exclusive_start_key = result.get("LastEvaluatedKey")
+                    if not exclusive_start_key:
+                        break
+            else:
+                kwargs["Limit"] = limit
+                result = blog_table.query(**kwargs)
+                items = result.get("Items", [])
         except ClientError as exc:
             logger.error("DynamoDB query error: %s", exc)
             return _response(500, {"message": "Failed to retrieve blog posts"})
