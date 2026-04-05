@@ -18,6 +18,33 @@ manifest_hash = ""
 packagetype = "Zip"
 functions = ["PortfolioFunction"]
 
+[function_build_definitions.c8ae3cc9-00e7-4d80-ad46-f0375148e665]
+codeuri = "C:\\Users\\alstj\\minseongkim-dev\\backend\\functions\\diary"
+runtime = "python3.14"
+architecture = "x86_64"
+handler = "handler.handler"
+manifest_hash = ""
+packagetype = "Zip"
+functions = ["DiaryFunction"]
+
+[function_build_definitions.4ed667df-381a-42cd-87ae-9ffdba6bdee4]
+codeuri = "C:\\Users\\alstj\\minseongkim-dev\\backend\\functions\\stats"
+runtime = "python3.14"
+architecture = "x86_64"
+handler = "handler.handler"
+manifest_hash = ""
+packagetype = "Zip"
+functions = ["StatsFunction"]
+
+[function_build_definitions.23dc369a-992c-4dc1-97d7-442cec9408ca]
+codeuri = "C:\\Users\\alstj\\minseongkim-dev\\backend\\functions\\public"
+runtime = "python3.14"
+architecture = "x86_64"
+handler = "handler.handler"
+manifest_hash = ""
+packagetype = "Zip"
+functions = ["PublicPortfolioFunction"]
+
 [layer_build_definitions.f0316bf3-0c85-4e09-82ab-0781b55d776b]
 layer_name = "DependenciesLayer"
 codeuri = "C:\\Users\\alstj\\minseongkim-dev\\backend"

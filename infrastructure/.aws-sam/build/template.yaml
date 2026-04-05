@@ -1,0 +1,628 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: 'AI Portfolio Builder - AWS Serverless stack (API Gateway + Lambda +
+  Bedrock + DynamoDB + S3 + CloudFront + Cognito)
+
+  '
+Globals:
+  Function:
+    Runtime: python3.14
+    Handler: handler.handler
+    Timeout: 60
+    MemorySize: 256
+    Layers:
+    - Ref: DependenciesLayer
+    Environment:
+      Variables:
+        AWS_ACCOUNT_ID:
+          Ref: AWS::AccountId
+        SESSIONS_TABLE:
+          Ref: SessionsTable
+        PORTFOLIOS_TABLE:
+          Ref: PortfoliosTable
+        DIARY_TABLE:
+          Ref: DiaryTable
+        CORS_ORIGIN:
+          Ref: AllowedOrigin
+        BEDROCK_REGION:
+          Ref: AWS::Region
+        BEDROCK_MODEL_ID: anthropic.claude-3-5-sonnet-20240620-v1:0
+        MAX_TOKENS: '4096'
+  Api:
+    Cors:
+      AllowMethods: '''GET,POST,PUT,OPTIONS'''
+      AllowHeaders: '''Content-Type,Authorization'''
+      AllowOrigin:
+        Fn::Sub: '''${AllowedOrigin}'''
+Parameters:
+  Environment:
+    Type: String
+    Default: dev
+    AllowedValues:
+    - dev
+    - staging
+    - prod
+    Description: Deployment environment
+  AllowedOrigin:
+    Type: String
+    Default: '*'
+    Description: 'Allowed CORS origin for API Gateway and Lambda. On initial deploy,
+      keep the default ''*''. After the CloudFront distribution is created, update
+      this parameter to ''https://<distribution-domain>.cloudfront.net'' to restrict
+      CORS.
+
+      '
+  ApiDomainName:
+    Type: String
+    Default: ''
+    Description: "API Gateway domain name for the CloudFront API origin. Leave empty\
+      \ on the FIRST deployment (CloudFront will serve S3 only). After the first deployment,\
+      \ copy the value from the ApiUrl output (e.g. abc123.execute-api.ap-northeast-2.amazonaws.com)\
+      \ and redeploy to enable CloudFront \u2192 API Gateway proxying.\n"
+Conditions:
+  HasApiDomainName:
+    Fn::Not:
+    - Fn::Equals:
+      - Ref: ApiDomainName
+      - ''
+Resources:
+  CognitoUserPool:
+    Type: AWS::Cognito::UserPool
+    Properties:
+      UserPoolName:
+        Fn::Sub: portfolio-user-pool-${Environment}
+      UsernameAttributes:
+      - email
+      AutoVerifiedAttributes:
+      - email
+      Policies:
+        PasswordPolicy:
+          MinimumLength: 8
+          RequireUppercase: true
+          RequireLowercase: true
+          RequireNumbers: true
+          RequireSymbols: false
+      Schema:
+      - Name: email
+        AttributeDataType: String
+        Required: true
+        Mutable: true
+      UserPoolTags:
+        Environment:
+          Ref: Environment
+  CognitoUserPoolClient:
+    Type: AWS::Cognito::UserPoolClient
+    Properties:
+      ClientName:
+        Fn::Sub: portfolio-app-client-${Environment}
+      UserPoolId:
+        Ref: CognitoUserPool
+      GenerateSecret: false
+      ExplicitAuthFlows:
+      - ALLOW_USER_SRP_AUTH
+      - ALLOW_REFRESH_TOKEN_AUTH
+      PreventUserExistenceErrors: ENABLED
+      TokenValidityUnits:
+        AccessToken: hours
+        IdToken: hours
+        RefreshToken: days
+      AccessTokenValidity: 1
+      IdTokenValidity: 1
+      RefreshTokenValidity: 30
+  DependenciesLayer:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      LayerName:
+        Fn::Sub: portfolio-deps-${Environment}
+      Description: Shared Python dependencies (boto3)
+      ContentUri: DependenciesLayer
+      CompatibleRuntimes:
+      - python3.14
+      RetentionPolicy: Delete
+    Metadata:
+      BuildMethod: python3.14
+      SamResourceId: DependenciesLayer
+  SessionsTable:
+    Type: AWS::DynamoDB::Table
+    DeletionPolicy: Retain
+    Properties:
+      TableName:
+        Fn::Sub: portfolio-sessions-${Environment}
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+      - AttributeName: sessionId
+        AttributeType: S
+      KeySchema:
+      - AttributeName: sessionId
+        KeyType: HASH
+      TimeToLiveSpecification:
+        AttributeName: ttl
+        Enabled: true
+      Tags:
+      - Key: Environment
+        Value:
+          Ref: Environment
+  PortfoliosTable:
+    Type: AWS::DynamoDB::Table
+    DeletionPolicy: Retain
+    Properties:
+      TableName:
+        Fn::Sub: portfolio-data-${Environment}
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+      - AttributeName: id
+        AttributeType: S
+      - AttributeName: sessionId
+        AttributeType: S
+      - AttributeName: updatedAt
+        AttributeType: S
+      KeySchema:
+      - AttributeName: id
+        KeyType: HASH
+      GlobalSecondaryIndexes:
+      - IndexName: sessionId-index
+        KeySchema:
+        - AttributeName: sessionId
+          KeyType: HASH
+        - AttributeName: updatedAt
+          KeyType: RANGE
+        Projection:
+          ProjectionType: ALL
+      Tags:
+      - Key: Environment
+        Value:
+          Ref: Environment
+  DiaryTable:
+    Type: AWS::DynamoDB::Table
+    DeletionPolicy: Retain
+    Properties:
+      TableName:
+        Fn::Sub: portfolio-diary-${Environment}
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+      - AttributeName: userId
+        AttributeType: S
+      - AttributeName: entryId
+        AttributeType: S
+      - AttributeName: category
+        AttributeType: S
+      - AttributeName: createdAt
+        AttributeType: S
+      KeySchema:
+      - AttributeName: userId
+        KeyType: HASH
+      - AttributeName: entryId
+        KeyType: RANGE
+      GlobalSecondaryIndexes:
+      - IndexName: category-createdAt-index
+        KeySchema:
+        - AttributeName: category
+          KeyType: HASH
+        - AttributeName: createdAt
+          KeyType: RANGE
+        Projection:
+          ProjectionType: ALL
+      Tags:
+      - Key: Environment
+        Value:
+          Ref: Environment
+  LambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName:
+        Fn::Sub: portfolio-lambda-role-${Environment}
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service: lambda.amazonaws.com
+          Action: sts:AssumeRole
+      ManagedPolicyArns:
+      - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+      - PolicyName: DynamoDBAccess
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+          - Effect: Allow
+            Action:
+            - dynamodb:GetItem
+            - dynamodb:PutItem
+            - dynamodb:UpdateItem
+            - dynamodb:DeleteItem
+            - dynamodb:Query
+            - dynamodb:Scan
+            Resource:
+            - Fn::GetAtt:
+              - SessionsTable
+              - Arn
+            - Fn::GetAtt:
+              - PortfoliosTable
+              - Arn
+            - Fn::Sub: ${PortfoliosTable.Arn}/index/*
+            - Fn::GetAtt:
+              - DiaryTable
+              - Arn
+            - Fn::Sub: ${DiaryTable.Arn}/index/*
+      - PolicyName: BedrockAccess
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+          - Effect: Allow
+            Action:
+            - bedrock:InvokeModel
+            Resource:
+            - Fn::Sub: arn:aws:bedrock:${AWS::Region}::foundation-model/anthropic.claude-3-5-sonnet-20240620-v1:0
+  ChatFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName:
+        Fn::Sub: portfolio-chat-${Environment}
+      CodeUri: ChatFunction
+      Role:
+        Fn::GetAtt:
+        - LambdaExecutionRole
+        - Arn
+      Description: Handle chat messages via Bedrock and update portfolio
+      Events:
+        ChatPost:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: PortfolioApi
+            Path: /chat
+            Method: POST
+            Auth:
+              Authorizer: CognitoAuthorizer
+        ChatOptions:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: PortfolioApi
+            Path: /chat
+            Method: OPTIONS
+            Auth:
+              Authorizer: NONE
+    Metadata:
+      SamResourceId: ChatFunction
+  PortfolioFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName:
+        Fn::Sub: portfolio-crud-${Environment}
+      CodeUri: PortfolioFunction
+      Role:
+        Fn::GetAtt:
+        - LambdaExecutionRole
+        - Arn
+      Description: CRUD operations for portfolio data
+      Events:
+        PortfolioGet:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: PortfolioApi
+            Path: /portfolio/{sessionId}
+            Method: GET
+            Auth:
+              Authorizer: CognitoAuthorizer
+        PortfolioPut:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: PortfolioApi
+            Path: /portfolio/{sessionId}
+            Method: PUT
+            Auth:
+              Authorizer: CognitoAuthorizer
+        PortfolioOptions:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: PortfolioApi
+            Path: /portfolio/{sessionId}
+            Method: OPTIONS
+            Auth:
+              Authorizer: NONE
+    Metadata:
+      SamResourceId: PortfolioFunction
+  DiaryFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName:
+        Fn::Sub: portfolio-diary-${Environment}
+      CodeUri: DiaryFunction
+      Role:
+        Fn::GetAtt:
+        - LambdaExecutionRole
+        - Arn
+      Description: Diary CRUD with Bedrock category classification
+      Events:
+        DiaryPost:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: PortfolioApi
+            Path: /diary
+            Method: POST
+            Auth:
+              Authorizer: CognitoAuthorizer
+        DiaryGet:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: PortfolioApi
+            Path: /diary
+            Method: GET
+            Auth:
+              Authorizer: CognitoAuthorizer
+        DiaryOptions:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: PortfolioApi
+            Path: /diary
+            Method: OPTIONS
+            Auth:
+              Authorizer: NONE
+    Metadata:
+      SamResourceId: DiaryFunction
+  StatsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName:
+        Fn::Sub: portfolio-stats-${Environment}
+      CodeUri: StatsFunction
+      Role:
+        Fn::GetAtt:
+        - LambdaExecutionRole
+        - Arn
+      Description: Diary statistics aggregation
+      Events:
+        StatsGet:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: PortfolioApi
+            Path: /stats
+            Method: GET
+            Auth:
+              Authorizer: CognitoAuthorizer
+        StatsOptions:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: PortfolioApi
+            Path: /stats
+            Method: OPTIONS
+            Auth:
+              Authorizer: NONE
+    Metadata:
+      SamResourceId: StatsFunction
+  PublicPortfolioFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName:
+        Fn::Sub: portfolio-public-${Environment}
+      CodeUri: PublicPortfolioFunction
+      Role:
+        Fn::GetAtt:
+        - LambdaExecutionRole
+        - Arn
+      Description: Public portfolio access (no auth required)
+      Events:
+        PublicGet:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: PortfolioApi
+            Path: /public/{portfolioId}
+            Method: GET
+            Auth:
+              Authorizer: NONE
+        PublicOptions:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: PortfolioApi
+            Path: /public/{portfolioId}
+            Method: OPTIONS
+            Auth:
+              Authorizer: NONE
+    Metadata:
+      SamResourceId: PublicPortfolioFunction
+  PortfolioApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      Name:
+        Fn::Sub: portfolio-api-${Environment}
+      StageName:
+        Ref: Environment
+      TracingEnabled: true
+      MethodSettings:
+      - ResourcePath: /*
+        HttpMethod: '*'
+        ThrottlingBurstLimit: 100
+        ThrottlingRateLimit: 50
+      Auth:
+        DefaultAuthorizer: CognitoAuthorizer
+        AddDefaultAuthorizerToCorsPreflight: false
+        Authorizers:
+          CognitoAuthorizer:
+            UserPoolArn:
+              Fn::GetAtt:
+              - CognitoUserPool
+              - Arn
+            Identity:
+              Header: Authorization
+  FrontendBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName:
+        Fn::Sub: portfolio-frontend-${Environment}-${AWS::AccountId}
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      Tags:
+      - Key: Environment
+        Value:
+          Ref: Environment
+  FrontendBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket:
+        Ref: FrontendBucket
+      PolicyDocument:
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service: cloudfront.amazonaws.com
+          Action: s3:GetObject
+          Resource:
+            Fn::Sub: ${FrontendBucket.Arn}/*
+          Condition:
+            StringEquals:
+              AWS:SourceArn:
+                Fn::Sub: arn:aws:cloudfront::${AWS::AccountId}:distribution/${CloudFrontDistribution}
+  CloudFrontOAC:
+    Type: AWS::CloudFront::OriginAccessControl
+    Properties:
+      OriginAccessControlConfig:
+        Name:
+          Fn::Sub: portfolio-oac-${Environment}
+        OriginAccessControlOriginType: s3
+        SigningBehavior: always
+        SigningProtocol: sigv4
+  CloudFrontDistribution:
+    Type: AWS::CloudFront::Distribution
+    Properties:
+      DistributionConfig:
+        Comment:
+          Fn::Sub: AI Portfolio Builder - ${Environment}
+        Enabled: true
+        DefaultRootObject: index.html
+        HttpVersion: http2
+        PriceClass: PriceClass_100
+        Origins:
+        - Id: S3Origin
+          DomainName:
+            Fn::GetAtt:
+            - FrontendBucket
+            - RegionalDomainName
+          S3OriginConfig:
+            OriginAccessIdentity: ''
+          OriginAccessControlId:
+            Fn::GetAtt:
+            - CloudFrontOAC
+            - Id
+        - Fn::If:
+          - HasApiDomainName
+          - Id: ApiOrigin
+            DomainName:
+              Ref: ApiDomainName
+            CustomOriginConfig:
+              HTTPSPort: 443
+              OriginProtocolPolicy: https-only
+          - Ref: AWS::NoValue
+        DefaultCacheBehavior:
+          TargetOriginId: S3Origin
+          ViewerProtocolPolicy: redirect-to-https
+          CachePolicyId: 658327ea-f89d-4fab-a63d-7e88639e58f6
+          Compress: true
+        CacheBehaviors:
+        - Fn::If:
+          - HasApiDomainName
+          - PathPattern:
+              Fn::Sub: /${Environment}/*
+            TargetOriginId: ApiOrigin
+            ViewerProtocolPolicy: https-only
+            CachePolicyId: 4135ea2d-6df8-44a3-9df3-4b5a84be39ad
+            AllowedMethods:
+            - GET
+            - HEAD
+            - OPTIONS
+            - PUT
+            - POST
+            - PATCH
+            - DELETE
+            OriginRequestPolicyId: b689b0a8-53d0-40ab-baf2-68738e2966ac
+          - Ref: AWS::NoValue
+        CustomErrorResponses:
+        - ErrorCode: 403
+          ResponseCode: 200
+          ResponsePagePath: /index.html
+        - ErrorCode: 404
+          ResponseCode: 200
+          ResponsePagePath: /index.html
+      Tags:
+      - Key: Environment
+        Value:
+          Ref: Environment
+Outputs:
+  ApiUrl:
+    Description: API Gateway endpoint URL
+    Value:
+      Fn::Sub: https://${PortfolioApi}.execute-api.${AWS::Region}.amazonaws.com/${Environment}
+    Export:
+      Name:
+        Fn::Sub: ${AWS::StackName}-ApiUrl
+  ApiDomainName:
+    Description: "API Gateway domain name - use this value for the ApiDomainName parameter\
+      \ on the second deployment to enable CloudFront \u2192 API proxying.\n"
+    Value:
+      Fn::Sub: ${PortfolioApi}.execute-api.${AWS::Region}.amazonaws.com
+    Export:
+      Name:
+        Fn::Sub: ${AWS::StackName}-ApiDomainName
+  CloudFrontUrl:
+    Description: CloudFront distribution URL
+    Value:
+      Fn::Sub: https://${CloudFrontDistribution.DomainName}
+    Export:
+      Name:
+        Fn::Sub: ${AWS::StackName}-CloudFrontUrl
+  FrontendBucketName:
+    Description: S3 bucket name for frontend assets
+    Value:
+      Ref: FrontendBucket
+    Export:
+      Name:
+        Fn::Sub: ${AWS::StackName}-FrontendBucket
+  SessionsTableName:
+    Description: DynamoDB sessions table name
+    Value:
+      Ref: SessionsTable
+    Export:
+      Name:
+        Fn::Sub: ${AWS::StackName}-SessionsTable
+  PortfoliosTableName:
+    Description: DynamoDB portfolios table name
+    Value:
+      Ref: PortfoliosTable
+    Export:
+      Name:
+        Fn::Sub: ${AWS::StackName}-PortfoliosTable
+  DiaryTableName:
+    Description: DynamoDB diary table name
+    Value:
+      Ref: DiaryTable
+    Export:
+      Name:
+        Fn::Sub: ${AWS::StackName}-DiaryTable
+  UserPoolId:
+    Description: Cognito User Pool ID
+    Value:
+      Ref: CognitoUserPool
+    Export:
+      Name:
+        Fn::Sub: ${AWS::StackName}-UserPoolId
+  UserPoolClientId:
+    Description: Cognito User Pool Client ID
+    Value:
+      Ref: CognitoUserPoolClient
+    Export:
+      Name:
+        Fn::Sub: ${AWS::StackName}-UserPoolClientId
