@@ -2,7 +2,7 @@ AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
 Description: >
   AI Portfolio Builder – AWS Serverless stack
-  (API Gateway + Lambda + Bedrock + DynamoDB + S3 + CloudFront)
+  (API Gateway + Lambda + Bedrock + DynamoDB + S3 + CloudFront + Cognito)
 
 # ---------------------------------------------------------------------------
 # Globals
@@ -20,6 +20,7 @@ Globals:
         AWS_ACCOUNT_ID: !Ref AWS::AccountId
         SESSIONS_TABLE: !Ref SessionsTable
         PORTFOLIOS_TABLE: !Ref PortfoliosTable
+        DIARY_TABLE: !Ref DiaryTable
         CORS_ORIGIN: !Ref AllowedOrigin
         BEDROCK_REGION: !Ref AWS::Region
         BEDROCK_MODEL_ID: "anthropic.claude-3-5-sonnet-20240620-v1:0"
@@ -69,6 +70,48 @@ Conditions:
 # Resources
 # ---------------------------------------------------------------------------
 Resources:
+
+  # ── Cognito User Pool ────────────────────────────────────────────────────
+  CognitoUserPool:
+    Type: AWS::Cognito::UserPool
+    Properties:
+      UserPoolName: !Sub "portfolio-user-pool-${Environment}"
+      UsernameAttributes:
+        - email
+      AutoVerifiedAttributes:
+        - email
+      Policies:
+        PasswordPolicy:
+          MinimumLength: 8
+          RequireUppercase: true
+          RequireLowercase: true
+          RequireNumbers: true
+          RequireSymbols: false
+      Schema:
+        - Name: email
+          AttributeDataType: String
+          Required: true
+          Mutable: true
+      UserPoolTags:
+        Environment: !Ref Environment
+
+  CognitoUserPoolClient:
+    Type: AWS::Cognito::UserPoolClient
+    Properties:
+      ClientName: !Sub "portfolio-app-client-${Environment}"
+      UserPoolId: !Ref CognitoUserPool
+      GenerateSecret: false
+      ExplicitAuthFlows:
+        - ALLOW_USER_SRP_AUTH
+        - ALLOW_REFRESH_TOKEN_AUTH
+      PreventUserExistenceErrors: ENABLED
+      TokenValidityUnits:
+        AccessToken: hours
+        IdToken: hours
+        RefreshToken: days
+      AccessTokenValidity: 1
+      IdTokenValidity: 1
+      RefreshTokenValidity: 30
 
   # ── Shared Lambda Layer (Python dependencies) ───────────────────────────
   DependenciesLayer:
@@ -132,6 +175,39 @@ Resources:
         - Key: Environment
           Value: !Ref Environment
 
+  DiaryTable:
+    Type: AWS::DynamoDB::Table
+    DeletionPolicy: Retain
+    Properties:
+      TableName: !Sub "portfolio-diary-${Environment}"
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: userId
+          AttributeType: S
+        - AttributeName: entryId
+          AttributeType: S
+        - AttributeName: category
+          AttributeType: S
+        - AttributeName: createdAt
+          AttributeType: S
+      KeySchema:
+        - AttributeName: userId
+          KeyType: HASH
+        - AttributeName: entryId
+          KeyType: RANGE
+      GlobalSecondaryIndexes:
+        - IndexName: category-createdAt-index
+          KeySchema:
+            - AttributeName: category
+              KeyType: HASH
+            - AttributeName: createdAt
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+      Tags:
+        - Key: Environment
+          Value: !Ref Environment
+
   # ── IAM Role (shared by Lambda functions) ───────────────────────────────
   LambdaExecutionRole:
     Type: AWS::IAM::Role
@@ -156,12 +232,15 @@ Resources:
                   - dynamodb:GetItem
                   - dynamodb:PutItem
                   - dynamodb:UpdateItem
+                  - dynamodb:DeleteItem
                   - dynamodb:Query
                   - dynamodb:Scan
                 Resource:
                   - !GetAtt SessionsTable.Arn
                   - !GetAtt PortfoliosTable.Arn
                   - !Sub "${PortfoliosTable.Arn}/index/*"
+                  - !GetAtt DiaryTable.Arn
+                  - !Sub "${DiaryTable.Arn}/index/*"
         - PolicyName: BedrockAccess
           PolicyDocument:
             Version: '2012-10-17'
@@ -187,12 +266,16 @@ Resources:
             RestApiId: !Ref PortfolioApi
             Path: /chat
             Method: POST
+            Auth:
+              Authorizer: CognitoAuthorizer
         ChatOptions:
           Type: Api
           Properties:
             RestApiId: !Ref PortfolioApi
             Path: /chat
             Method: OPTIONS
+            Auth:
+              Authorizer: NONE
 
   PortfolioFunction:
     Type: AWS::Serverless::Function
@@ -208,18 +291,107 @@ Resources:
             RestApiId: !Ref PortfolioApi
             Path: /portfolio/{sessionId}
             Method: GET
+            Auth:
+              Authorizer: CognitoAuthorizer
         PortfolioPut:
           Type: Api
           Properties:
             RestApiId: !Ref PortfolioApi
             Path: /portfolio/{sessionId}
             Method: PUT
+            Auth:
+              Authorizer: CognitoAuthorizer
         PortfolioOptions:
           Type: Api
           Properties:
             RestApiId: !Ref PortfolioApi
             Path: /portfolio/{sessionId}
             Method: OPTIONS
+            Auth:
+              Authorizer: NONE
+
+  DiaryFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "portfolio-diary-${Environment}"
+      CodeUri: ../backend/functions/diary/
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Description: "Diary CRUD with Bedrock category classification"
+      Events:
+        DiaryPost:
+          Type: Api
+          Properties:
+            RestApiId: !Ref PortfolioApi
+            Path: /diary
+            Method: POST
+            Auth:
+              Authorizer: CognitoAuthorizer
+        DiaryGet:
+          Type: Api
+          Properties:
+            RestApiId: !Ref PortfolioApi
+            Path: /diary
+            Method: GET
+            Auth:
+              Authorizer: CognitoAuthorizer
+        DiaryOptions:
+          Type: Api
+          Properties:
+            RestApiId: !Ref PortfolioApi
+            Path: /diary
+            Method: OPTIONS
+            Auth:
+              Authorizer: NONE
+
+  StatsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "portfolio-stats-${Environment}"
+      CodeUri: ../backend/functions/stats/
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Description: "Diary statistics aggregation"
+      Events:
+        StatsGet:
+          Type: Api
+          Properties:
+            RestApiId: !Ref PortfolioApi
+            Path: /stats
+            Method: GET
+            Auth:
+              Authorizer: CognitoAuthorizer
+        StatsOptions:
+          Type: Api
+          Properties:
+            RestApiId: !Ref PortfolioApi
+            Path: /stats
+            Method: OPTIONS
+            Auth:
+              Authorizer: NONE
+
+  PublicPortfolioFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "portfolio-public-${Environment}"
+      CodeUri: ../backend/functions/public/
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Description: "Public portfolio access (no auth required)"
+      Events:
+        PublicGet:
+          Type: Api
+          Properties:
+            RestApiId: !Ref PortfolioApi
+            Path: /public/{portfolioId}
+            Method: GET
+            Auth:
+              Authorizer: NONE
+        PublicOptions:
+          Type: Api
+          Properties:
+            RestApiId: !Ref PortfolioApi
+            Path: /public/{portfolioId}
+            Method: OPTIONS
+            Auth:
+              Authorizer: NONE
 
   # ── API Gateway ──────────────────────────────────────────────────────────
   PortfolioApi:
@@ -233,6 +405,14 @@ Resources:
           HttpMethod: "*"
           ThrottlingBurstLimit: 100
           ThrottlingRateLimit: 50
+      Auth:
+        DefaultAuthorizer: CognitoAuthorizer
+        AddDefaultAuthorizerToCorsPreflight: false
+        Authorizers:
+          CognitoAuthorizer:
+            UserPoolArn: !GetAtt CognitoUserPool.Arn
+            Identity:
+              Header: Authorization
 
   # ── S3 Bucket (frontend static assets) ──────────────────────────────────
   FrontendBucket:
@@ -363,3 +543,21 @@ Outputs:
     Value: !Ref PortfoliosTable
     Export:
       Name: !Sub "${AWS::StackName}-PortfoliosTable"
+
+  DiaryTableName:
+    Description: "DynamoDB diary table name"
+    Value: !Ref DiaryTable
+    Export:
+      Name: !Sub "${AWS::StackName}-DiaryTable"
+
+  UserPoolId:
+    Description: "Cognito User Pool ID"
+    Value: !Ref CognitoUserPool
+    Export:
+      Name: !Sub "${AWS::StackName}-UserPoolId"
+
+  UserPoolClientId:
+    Description: "Cognito User Pool Client ID"
+    Value: !Ref CognitoUserPoolClient
+    Export:
+      Name: !Sub "${AWS::StackName}-UserPoolClientId"

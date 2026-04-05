@@ -1,0 +1,133 @@
+.authPage {
+  min-height: 100svh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg);
+}
+
+.authCard {
+  width: 100%;
+  max-width: 400px;
+  padding: 40px 36px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--bg);
+  box-shadow: var(--shadow);
+}
+
+.authLogo {
+  text-align: center;
+  font-size: 36px;
+  margin-bottom: 8px;
+}
+
+.authTitle {
+  text-align: center;
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text-h);
+  margin: 0 0 4px;
+  letter-spacing: -0.3px;
+}
+
+.authSubtitle {
+  text-align: center;
+  font-size: 14px;
+  color: var(--text);
+  margin: 0 0 28px;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-h);
+}
+
+.input {
+  padding: 10px 14px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  font-size: 15px;
+  background: var(--bg);
+  color: var(--text-h);
+  outline: none;
+  transition: border-color 0.15s;
+  font-family: var(--sans);
+}
+
+.input:focus {
+  border-color: var(--accent-border);
+}
+
+.input::placeholder {
+  color: var(--text);
+  opacity: 0.5;
+}
+
+.hint {
+  font-size: 12px;
+  color: var(--text);
+  opacity: 0.7;
+}
+
+.submitButton {
+  padding: 11px 20px;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.15s;
+  margin-top: 4px;
+}
+
+.submitButton:hover:not(:disabled) {
+  opacity: 0.87;
+}
+
+.submitButton:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.error {
+  padding: 10px 14px;
+  border-radius: 8px;
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #dc2626;
+  font-size: 13px;
+}
+
+.switchRow {
+  text-align: center;
+  font-size: 14px;
+  color: var(--text);
+  margin-top: 4px;
+}
+
+.switchLink {
+  color: var(--accent);
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  text-decoration: underline;
+}
