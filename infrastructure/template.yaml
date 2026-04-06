@@ -9,7 +9,7 @@ Description: >
 # ---------------------------------------------------------------------------
 Globals:
   Function:
-    Runtime: python3.14
+    Runtime: python3.13
     Handler: handler.handler
     Timeout: 60
     MemorySize: 256
