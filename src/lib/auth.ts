@@ -1,14 +1,34 @@
 import { Amplify } from 'aws-amplify';
 import { fetchAuthSession, signIn, signOut, signUp, confirmSignUp, getCurrentUser } from 'aws-amplify/auth';
 
-const USER_POOL_ID = import.meta.env.VITE_COGNITO_USER_POOL_ID ?? '';
-const CLIENT_ID = import.meta.env.VITE_COGNITO_CLIENT_ID ?? '';
+const USER_POOL_ID = import.meta.env.VITE_COGNITO_USER_POOL_ID ?? import.meta.env.VITE_USER_POOL_ID ?? '';
+const CLIENT_ID = import.meta.env.VITE_COGNITO_CLIENT_ID ?? import.meta.env.VITE_USER_POOL_CLIENT_ID ?? '';
+const AWS_REGION = import.meta.env.VITE_AWS_REGION ?? 'ap-northeast-2';
+
+if (!USER_POOL_ID || !CLIENT_ID) {
+  console.warn('⚠️ Cognito not configured. Please set VITE_COGNITO_USER_POOL_ID and VITE_COGNITO_CLIENT_ID in .env.local');
+}
 
 Amplify.configure({
   Auth: {
     Cognito: {
       userPoolId: USER_POOL_ID,
       userPoolClientId: CLIENT_ID,
+      loginWith: {
+        email: true,
+      },
+      signUpVerificationMethod: 'code',
+      userAttributes: {
+        email: {
+          required: true,
+        },
+      },
+      passwordFormat: {
+        minLength: 8,
+        requireLowercase: true,
+        requireUppercase: true,
+        requireNumbers: true,
+      },
     },
   },
 });
