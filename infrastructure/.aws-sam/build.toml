@@ -45,6 +45,33 @@ manifest_hash = ""
 packagetype = "Zip"
 functions = ["PublicPortfolioFunction"]
 
+[function_build_definitions.d67f172a-bfd4-41dd-975f-a87db63b633c]
+codeuri = "C:\\Users\\alstj\\minseongkim-dev\\backend\\functions\\blog"
+runtime = "python3.14"
+architecture = "x86_64"
+handler = "handler.handler"
+manifest_hash = ""
+packagetype = "Zip"
+functions = ["BlogFunction"]
+
+[function_build_definitions.65b80af5-8662-442c-902b-af45a9aedaea]
+codeuri = "C:\\Users\\alstj\\minseongkim-dev\\backend\\functions\\public_blog"
+runtime = "python3.14"
+architecture = "x86_64"
+handler = "handler.handler"
+manifest_hash = ""
+packagetype = "Zip"
+functions = ["PublicBlogFunction"]
+
+[function_build_definitions.33323434-c559-4889-a2a7-cd7898389e9f]
+codeuri = "C:\\Users\\alstj\\minseongkim-dev\\backend\\functions\\blog_publish"
+runtime = "python3.14"
+architecture = "x86_64"
+handler = "handler.handler"
+manifest_hash = ""
+packagetype = "Zip"
+functions = ["BlogPublishFunction"]
+
 [layer_build_definitions.f0316bf3-0c85-4e09-82ab-0781b55d776b]
 layer_name = "DependenciesLayer"
 codeuri = "C:\\Users\\alstj\\minseongkim-dev\\backend"
