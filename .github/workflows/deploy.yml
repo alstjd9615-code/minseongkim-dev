@@ -49,10 +49,13 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ap-northeast-2
 
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.14'
-
+      - name: Install Python 3.14
+        run: |
+          sudo add-apt-repository ppa:deadsnakes/ppa -y 
+          sudo apt-get update
+          sudo apt-get install -y python3.14 python3.14-venv
+          sudo ln -sf /usr/bin/python3.14 /usr/local/bin/python3
+          sudo ln -sf /usr/bin/python3.14 /usr/local/bin/python
       - name: Install AWS SAM CLI
         run: pip install aws-sam-cli
 
