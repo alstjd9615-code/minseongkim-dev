@@ -15,7 +15,6 @@ import json
 import logging
 import os
 import re
-from urllib import response
 import uuid
 from datetime import datetime, timezone
 from typing import Any
@@ -104,9 +103,19 @@ def _generate_blog_with_bedrock(diary_entries: list[dict[str, Any]]) -> dict[str
     
     import re
     text = json.loads(response["body"].read())["content"][0]["text"].strip()
+
+    # Strip markdown code fences that the model may wrap the JSON in.
+    text = re.sub(r'^```(?:json)?\s*', '', text, flags=re.MULTILINE)
+    text = re.sub(r'\s*```\s*$', '', text, flags=re.MULTILINE)
+    text = text.strip()
+
+    # Remove control characters that are not valid inside JSON strings
+    # (\x00-\x08, \x0b, \x0c, \x0e-\x1f, \x7f) while preserving \t, \n, \r.
     text = re.sub(r'[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]', '', text)
-    result = json.loads(text)
-    
+
+    # strict=False allows literal tab/newline characters inside JSON strings,
+    # which avoids "Invalid control character" errors from model-generated content.
+    result = json.loads(text, strict=False)
     if not isinstance(result.get("tags"), list):
         result["tags"] = []
     result["tags"] = result["tags"][:10]
