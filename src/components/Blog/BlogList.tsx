@@ -368,13 +368,15 @@ function BlogEditor({ post, onClose, onSaved }: BlogEditorProps) {
   const [title, setTitle] = useState(post.title);
   const [content, setContent] = useState(post.content);
   const [excerpt, setExcerpt] = useState(post.excerpt);
+  const [tags, setTags] = useState<string[]>(post.tags);
+  const [tagInput, setTagInput] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const handleSave = async (newStatus?: BlogStatus) => {
     setIsSaving(true);
     setError(null);
-    const payload: UpdateBlogRequest = { title, content, excerpt };
+    const payload: UpdateBlogRequest = { title, content, excerpt, tags };
     if (newStatus) payload.status = newStatus;
     try {
       const updated = await updateBlogPost(post.postId, payload);
@@ -383,6 +385,18 @@ function BlogEditor({ post, onClose, onSaved }: BlogEditorProps) {
       setError(err instanceof Error ? err.message : '저장에 실패했습니다.');
       setIsSaving(false);
     }
+  };
+
+  const addTag = () => {
+    const trimmed = tagInput.trim();
+    if (trimmed && !tags.includes(trimmed) && tags.length < 10) {
+      setTags([...tags, trimmed]);
+      setTagInput('');
+    }
+  };
+
+  const removeTag = (tagToRemove: string) => {
+    setTags(tags.filter(t => t !== tagToRemove));
   };
 
   return (
@@ -414,6 +428,32 @@ function BlogEditor({ post, onClose, onSaved }: BlogEditorProps) {
               onChange={e => setExcerpt(e.target.value)}
               placeholder="한 줄 요약 (검색 결과, 목록 등에 표시됩니다)"
             />
+          </div>
+
+          <div>
+            <p className={styles.fieldLabel}>태그 (최대 10개)</p>
+            <div style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
+              <input
+                className={styles.fieldInput}
+                value={tagInput}
+                onChange={e => setTagInput(e.target.value)}
+                onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addTag(); } }}
+                placeholder="태그 입력 후 Enter"
+                style={{ flex: 1 }}
+              />
+              <button className={styles.actionBtn} onClick={addTag} disabled={tags.length >= 10}>
+                추가
+              </button>
+            </div>
+            {tags.length > 0 && (
+              <div className={styles.postTags}>
+                {tags.map((tag, index) => (
+                  <span key={`${tag}-${index}`} className={styles.tag} style={{ cursor: 'pointer' }} onClick={() => removeTag(tag)}>
+                    #{tag} ✕
+                  </span>
+                ))}
+              </div>
+            )}
           </div>
 
           <div>
