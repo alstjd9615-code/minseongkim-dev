@@ -22,6 +22,9 @@ Globals:
         PORTFOLIOS_TABLE: !Ref PortfoliosTable
         DIARY_TABLE: !Ref DiaryTable
         BLOG_TABLE: !Ref BlogTable
+        WORKOUT_TABLE: !Ref WorkoutTable
+        KNOWLEDGE_TABLE: !Ref KnowledgeTable
+        GOALS_TABLE: !Ref GoalsTable
         CORS_ORIGIN: !Ref AllowedOrigin
         BEDROCK_REGION: !Ref AWS::Region
         BEDROCK_MODEL_ID: "anthropic.claude-3-5-sonnet-20240620-v1:0"
@@ -242,6 +245,66 @@ Resources:
         - Key: Environment
           Value: !Ref Environment
 
+  WorkoutTable:
+    Type: AWS::DynamoDB::Table
+    DeletionPolicy: Retain
+    Properties:
+      TableName: !Sub "lifemanager-workout-${Environment}"
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: userId
+          AttributeType: S
+        - AttributeName: workoutId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: userId
+          KeyType: HASH
+        - AttributeName: workoutId
+          KeyType: RANGE
+      Tags:
+        - Key: Environment
+          Value: !Ref Environment
+
+  KnowledgeTable:
+    Type: AWS::DynamoDB::Table
+    DeletionPolicy: Retain
+    Properties:
+      TableName: !Sub "lifemanager-knowledge-${Environment}"
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: userId
+          AttributeType: S
+        - AttributeName: knowledgeId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: userId
+          KeyType: HASH
+        - AttributeName: knowledgeId
+          KeyType: RANGE
+      Tags:
+        - Key: Environment
+          Value: !Ref Environment
+
+  GoalsTable:
+    Type: AWS::DynamoDB::Table
+    DeletionPolicy: Retain
+    Properties:
+      TableName: !Sub "lifemanager-goals-${Environment}"
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: userId
+          AttributeType: S
+        - AttributeName: goalId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: userId
+          KeyType: HASH
+        - AttributeName: goalId
+          KeyType: RANGE
+      Tags:
+        - Key: Environment
+          Value: !Ref Environment
+
   # ── IAM Role (shared by Lambda functions) ───────────────────────────────
   LambdaExecutionRole:
     Type: AWS::IAM::Role
@@ -277,6 +340,9 @@ Resources:
                   - !Sub "${DiaryTable.Arn}/index/*"
                   - !GetAtt BlogTable.Arn
                   - !Sub "${BlogTable.Arn}/index/*"
+                  - !GetAtt WorkoutTable.Arn
+                  - !GetAtt KnowledgeTable.Arn
+                  - !GetAtt GoalsTable.Arn
         - PolicyName: BedrockAccess
           PolicyDocument:
             Version: '2012-10-17'
@@ -560,7 +626,160 @@ Resources:
             Auth:
               Authorizer: NONE
 
-  # ── API Gateway ──────────────────────────────────────────────────────────
+  WorkoutFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "lifemanager-workout-${Environment}"
+      CodeUri: ../backend/functions/workout/
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Description: "Workout tracking CRUD"
+      Events:
+        WorkoutPost:
+          Type: Api
+          Properties:
+            RestApiId: !Ref PortfolioApi
+            Path: /workout
+            Method: POST
+            Auth:
+              Authorizer: CognitoAuthorizer
+        WorkoutGet:
+          Type: Api
+          Properties:
+            RestApiId: !Ref PortfolioApi
+            Path: /workout
+            Method: GET
+            Auth:
+              Authorizer: CognitoAuthorizer
+        WorkoutDelete:
+          Type: Api
+          Properties:
+            RestApiId: !Ref PortfolioApi
+            Path: /workout/{workoutId}
+            Method: DELETE
+            Auth:
+              Authorizer: CognitoAuthorizer
+        WorkoutOptions:
+          Type: Api
+          Properties:
+            RestApiId: !Ref PortfolioApi
+            Path: /workout
+            Method: OPTIONS
+            Auth:
+              Authorizer: NONE
+        WorkoutItemOptions:
+          Type: Api
+          Properties:
+            RestApiId: !Ref PortfolioApi
+            Path: /workout/{workoutId}
+            Method: OPTIONS
+            Auth:
+              Authorizer: NONE
+
+  KnowledgeFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "lifemanager-knowledge-${Environment}"
+      CodeUri: ../backend/functions/knowledge/
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Description: "Knowledge management CRUD with AI summarisation"
+      Events:
+        KnowledgePost:
+          Type: Api
+          Properties:
+            RestApiId: !Ref PortfolioApi
+            Path: /knowledge
+            Method: POST
+            Auth:
+              Authorizer: CognitoAuthorizer
+        KnowledgeGet:
+          Type: Api
+          Properties:
+            RestApiId: !Ref PortfolioApi
+            Path: /knowledge
+            Method: GET
+            Auth:
+              Authorizer: CognitoAuthorizer
+        KnowledgeDelete:
+          Type: Api
+          Properties:
+            RestApiId: !Ref PortfolioApi
+            Path: /knowledge/{knowledgeId}
+            Method: DELETE
+            Auth:
+              Authorizer: CognitoAuthorizer
+        KnowledgeOptions:
+          Type: Api
+          Properties:
+            RestApiId: !Ref PortfolioApi
+            Path: /knowledge
+            Method: OPTIONS
+            Auth:
+              Authorizer: NONE
+        KnowledgeItemOptions:
+          Type: Api
+          Properties:
+            RestApiId: !Ref PortfolioApi
+            Path: /knowledge/{knowledgeId}
+            Method: OPTIONS
+            Auth:
+              Authorizer: NONE
+
+  GoalsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "lifemanager-goals-${Environment}"
+      CodeUri: ../backend/functions/goals/
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Description: "Goal tracking CRUD"
+      Events:
+        GoalsPost:
+          Type: Api
+          Properties:
+            RestApiId: !Ref PortfolioApi
+            Path: /goals
+            Method: POST
+            Auth:
+              Authorizer: CognitoAuthorizer
+        GoalsGet:
+          Type: Api
+          Properties:
+            RestApiId: !Ref PortfolioApi
+            Path: /goals
+            Method: GET
+            Auth:
+              Authorizer: CognitoAuthorizer
+        GoalsPut:
+          Type: Api
+          Properties:
+            RestApiId: !Ref PortfolioApi
+            Path: /goals/{goalId}
+            Method: PUT
+            Auth:
+              Authorizer: CognitoAuthorizer
+        GoalsDelete:
+          Type: Api
+          Properties:
+            RestApiId: !Ref PortfolioApi
+            Path: /goals/{goalId}
+            Method: DELETE
+            Auth:
+              Authorizer: CognitoAuthorizer
+        GoalsOptions:
+          Type: Api
+          Properties:
+            RestApiId: !Ref PortfolioApi
+            Path: /goals
+            Method: OPTIONS
+            Auth:
+              Authorizer: NONE
+        GoalsItemOptions:
+          Type: Api
+          Properties:
+            RestApiId: !Ref PortfolioApi
+            Path: /goals/{goalId}
+            Method: OPTIONS
+            Auth:
+              Authorizer: NONE
   PortfolioApi:
     Type: AWS::Serverless::Api
     Properties:
@@ -722,6 +941,24 @@ Outputs:
     Value: !Ref BlogTable
     Export:
       Name: !Sub "${AWS::StackName}-BlogTable"
+
+  WorkoutTableName:
+    Description: "DynamoDB workout table name"
+    Value: !Ref WorkoutTable
+    Export:
+      Name: !Sub "${AWS::StackName}-WorkoutTable"
+
+  KnowledgeTableName:
+    Description: "DynamoDB knowledge table name"
+    Value: !Ref KnowledgeTable
+    Export:
+      Name: !Sub "${AWS::StackName}-KnowledgeTable"
+
+  GoalsTableName:
+    Description: "DynamoDB goals table name"
+    Value: !Ref GoalsTable
+    Export:
+      Name: !Sub "${AWS::StackName}-GoalsTable"
 
   UserPoolId:
     Description: "Cognito User Pool ID"

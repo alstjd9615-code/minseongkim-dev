@@ -117,6 +117,119 @@ export interface PublicBlogListResponse {
 }
 
 
+// ── Workout types ─────────────────────────────────────────────────────────────
+
+export type WorkoutType =
+  | '달리기' | '걷기' | '자전거' | '수영'
+  | '헬스' | '홈트' | '크로스핏'
+  | '요가' | '필라테스' | '스트레칭'
+  | '축구' | '농구' | '테니스' | '배드민턴'
+  | '기타';
+
+export const WORKOUT_TYPES: WorkoutType[] = [
+  '달리기', '걷기', '자전거', '수영',
+  '헬스', '홈트', '크로스핏',
+  '요가', '필라테스', '스트레칭',
+  '축구', '농구', '테니스', '배드민턴',
+  '기타',
+];
+
+export type WorkoutIntensity = '낮음' | '보통' | '높음';
+export const WORKOUT_INTENSITIES: WorkoutIntensity[] = ['낮음', '보통', '높음'];
+
+export interface WorkoutEntry {
+  userId: string;
+  workoutId: string;
+  workoutType: WorkoutType;
+  durationMin: number;
+  intensity: WorkoutIntensity;
+  notes: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateWorkoutRequest {
+  workoutType: WorkoutType;
+  durationMin: number;
+  intensity: WorkoutIntensity;
+  notes?: string;
+}
+
+export interface WorkoutListResponse {
+  entries: WorkoutEntry[];
+  count: number;
+}
+
+// ── Knowledge types ────────────────────────────────────────────────────────────
+
+export type KnowledgeType = '책' | '아티클' | '강의' | '영상' | '기타';
+export const KNOWLEDGE_TYPES: KnowledgeType[] = ['책', '아티클', '강의', '영상', '기타'];
+
+export interface KnowledgeEntry {
+  userId: string;
+  knowledgeId: string;
+  knowledgeType: KnowledgeType;
+  title: string;
+  author: string;
+  notes: string;
+  tags: string[];
+  aiSummary: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateKnowledgeRequest {
+  knowledgeType: KnowledgeType;
+  title: string;
+  author?: string;
+  notes: string;
+}
+
+export interface KnowledgeListResponse {
+  entries: KnowledgeEntry[];
+  count: number;
+}
+
+// ── Goal types ─────────────────────────────────────────────────────────────────
+
+export type GoalStatus = '진행중' | '완료' | '포기';
+export type GoalPeriod = '단기' | '장기';
+export const GOAL_STATUSES: GoalStatus[] = ['진행중', '완료', '포기'];
+export const GOAL_PERIODS: GoalPeriod[] = ['단기', '장기'];
+
+export interface GoalEntry {
+  userId: string;
+  goalId: string;
+  period: GoalPeriod;
+  title: string;
+  description: string;
+  status: GoalStatus;
+  progress: number;
+  dueDate?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateGoalRequest {
+  period: GoalPeriod;
+  title: string;
+  description?: string;
+  dueDate?: string;
+}
+
+export interface UpdateGoalRequest {
+  status?: GoalStatus;
+  progress?: number;
+  title?: string;
+  description?: string;
+  dueDate?: string;
+}
+
+export interface GoalListResponse {
+  entries: GoalEntry[];
+  count: number;
+}
+
 export interface CategoryStat {
   category: DiaryCategory;
   count: number;
