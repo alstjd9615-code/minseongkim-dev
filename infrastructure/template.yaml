@@ -125,10 +125,10 @@ Resources:
       Description: Shared Python dependencies (boto3)
       ContentUri: ../backend/
       CompatibleRuntimes:
-        - python3.14
+        - python3.13
       RetentionPolicy: Delete
     Metadata:
-      BuildMethod: python3.14
+      BuildMethod: python3.13
 
   # ── DynamoDB Tables ──────────────────────────────────────────────────────
   SessionsTable:
