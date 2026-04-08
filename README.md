@@ -1,134 +1,132 @@
-# AI Portfolio Builder ✨
+# AI 라이프 매니저 🧬
 
-> Transform your daily thoughts into a professional portfolio and blog with AI-powered automation
+> 나만의 AI 기반 개인 라이프 매니저 — 커리어, 지식, 운동, 목표를 한 곳에서 관리
 
-[![Deploy](https://github.com/alstjd9615-code/minseongkim-dev/actions/workflows/deploy.yml/badge.svg)](https://github.com/alstjd9615-code/minseongkim-dev/actions/workflows/deploy.yml)
 [![Python](https://img.shields.io/badge/python-3.13-blue.svg)](https://www.python.org/downloads/)
 [![React](https://img.shields.io/badge/react-19-61DAFB.svg)](https://reactjs.org/)
 [![TypeScript](https://img.shields.io/badge/typescript-5.9-3178C6.svg)](https://www.typescriptlang.org/)
 [![AWS](https://img.shields.io/badge/AWS-Serverless-FF9900.svg)](https://aws.amazon.com/)
 
-An all-in-one platform that combines **AI-powered portfolio generation**, **daily journaling**, and **intelligent blog creation** using AWS serverless architecture and Amazon Bedrock (Claude 3.5 Sonnet).
+**개인 전용** AI 라이프 매니저입니다. AWS 서버리스 인프라와 Amazon Bedrock (Claude 3.5 Sonnet)을 기반으로, 커리어·지식·운동·목표를 AI로 관리합니다.
 
 ---
 
-## ✨ Features
+## ✨ 주요 기능
 
-### 🤖 AI Portfolio Generator
-- **Natural Language Input**: Chat with AI to build your portfolio naturally
-- **Automatic Structuring**: AI organizes your experience, skills, and projects into professional sections
-- **Notion-Style Rendering**: Beautiful markdown-based block viewer with dark/light mode
+### 💼 커리어
+- **AI 포트폴리오 빌더**: Claude와 대화하며 자동으로 포트폴리오 생성
+- **블로그**: 일상 기록을 AI가 블로그 포스트로 변환 (초안 저장·편집·발행)
 
-### 📓 Daily Journal
-- **Quick Capture**: Record daily thoughts, learnings, and experiences
-- **AI Categorization**: Automatic tagging and categorization
-- **Smart Search**: Filter by category, date, and tags
+### 🧠 지식 관리
+- **책/아티클/강의/영상 기록**: 읽고 들은 것을 노트와 함께 저장
+- **AI 자동 요약**: Claude가 핵심 요약과 태그를 자동 추출
+- **유형별 필터**: 책 / 아티클 / 강의 / 영상 / 기타
 
-### ✍️ AI Blog Generator
-- **Diary to Blog**: Transform your journal entries into polished blog posts with one click
-- **AI Writing Assistant**: Claude 3.5 Sonnet generates engaging, readable content
-- **Draft Management**: Save, edit, and publish your posts
-- **Public Sharing**: Share published posts with custom URLs
-- **External Publishing**: Export to Medium, Tistory (coming soon)
+### 💪 운동 관리
+- **운동 기록**: 종류, 시간, 강도, 메모 기록
+- **Quick Overview**: 총 운동 횟수, 총 시간, 이번 주 운동 현황
+- **이력 조회**: 날짜순 운동 기록 목록
 
-### 📊 Analytics Dashboard
-- **Activity Tracking**: Monitor your writing and productivity
-- **Insights**: Visualize trends in your journal and blog posts
-- **Statistics**: Track views, posts, and engagement
+### 🎯 목표 관리
+- **단기/장기 목표 설정**: 제목, 설명, 기한 설정
+- **진행률 추적**: 슬라이더로 달성률 업데이트
+- **상태 관리**: 진행중 / 완료 / 포기
 
-### 🔐 Secure & Scalable
-- **AWS Cognito Authentication**: Secure user management
-- **Serverless Architecture**: Auto-scaling, pay-per-use infrastructure
-- **CloudFront CDN**: Fast global content delivery
-- **DynamoDB**: High-performance NoSQL database
+### 📓 일상 기록
+- **자유 기록**: 오늘의 생각, 독서, 운동, 아이디어를 자유롭게 입력
+- **AI 자동 분류**: 카테고리 자동 태깅 (독서·운동·프로젝트·시사·목표·아이디어)
+
+### 🤖 AI 어시스턴트
+- **자유 대화**: Claude와 자유롭게 대화하며 조언 및 아이디어 탐구
+
+### 📊 대시보드
+- **활동 통계**: 카테고리별 기록 수, 연속 기록 일수
+- **시각화**: 막대 차트, 파이 차트, 30일 히트맵
 
 ---
 
-## 🏗️ Architecture
+## 🎨 UI
+
+| 항목 | 사양 |
+|------|------|
+| 레이아웃 | 왼쪽 사이드바 + 메인 콘텐츠 |
+| 사이드바 | #1E3A5F 다크 네이비 |
+| 메인 배경 | #F8FAFC 라이트 |
+| 포인트 컬러 | #3B82F6 블루 |
+| 카드 배경 | #FFFFFF |
+| 텍스트 | #1E293B |
+| 모드 | 라이트 모드 고정 |
+
+---
+
+## 🏗️ 아키텍처
 
 ```
-┌─────────────────┐
-│   User Browser  │
-└────────┬────────┘
-         │
-    ┌────▼────┐
-    │CloudFront│──► S3 (Static React App)
-    │   +CDN   │
-    └────┬────┘
-         │
-    ┌────▼────────┐
-    │ API Gateway │──► Cognito (Authentication)
-    └────┬────────┘
-         │
-    ┌────▼───────────────────────────┐
-    │      Lambda Functions          │
-    │  ┌──────────────────────────┐  │
-    │  │ • chat      ┐            │  │
-    │  │ • portfolio │            │  │
-    │  │ • diary     │──► Bedrock │  │
-    │  │ • blog      │   (Claude) │  │
-    │  │ • stats     ┘            │  │
-    │  └──────────────────────────┘  │
-    └────┬───────────────────────────┘
-         │
-    ┌────▼─────────┐
-    │  DynamoDB    │
-    │ ┌──────────┐ │
-    │ │Sessions  │ │
-    │ │Portfolio │ │
-    │ │Diary     │ │
-    │ │Blog      │ │
-    │ └──────────┘ │
-    └──────────────┘
+┌─────────────────────────────────────┐
+│         개인 브라우저 (로컬)          │
+└──────────────┬──────────────────────┘
+               │
+         ┌─────▼─────┐
+         │CloudFront │──► S3 (React 앱)
+         └─────┬─────┘
+               │
+         ┌─────▼──────────┐
+         │  API Gateway   │──► Cognito (인증)
+         └─────┬──────────┘
+               │
+     ┌─────────▼─────────────────────────┐
+     │         Lambda Functions          │
+     │  chat · portfolio · diary · blog  │
+     │  workout · knowledge · goals      │──► Bedrock (Claude)
+     │  stats · public                   │
+     └─────────┬─────────────────────────┘
+               │
+     ┌─────────▼─────────┐
+     │     DynamoDB      │
+     │  Sessions         │
+     │  Portfolios       │
+     │  Diary            │
+     │  Blog             │
+     │  Workout  (신규)  │
+     │  Knowledge (신규) │
+     │  Goals    (신규)  │
+     └───────────────────┘
 ```
 
-### Tech Stack
+### 기술 스택
 
-| Layer | Technology |
-|-------|-----------|
-| **Frontend** | React 19, TypeScript, Vite, React Router |
+| 레이어 | 기술 |
+|--------|------|
+| **Frontend** | React 19, TypeScript, Vite, CSS Modules |
 | **Backend** | AWS Lambda (Python 3.13) |
-| **AI Engine** | Amazon Bedrock (Claude 3.5 Sonnet) |
+| **AI** | Amazon Bedrock (Claude 3.5 Sonnet) |
 | **Database** | Amazon DynamoDB (On-Demand) |
-| **Authentication** | Amazon Cognito |
+| **인증** | Amazon Cognito |
 | **API** | Amazon API Gateway (REST) |
 | **CDN/Storage** | Amazon CloudFront + S3 |
-| **Infrastructure** | AWS SAM (Serverless Application Model) |
-| **CI/CD** | GitHub Actions |
+| **Infrastructure** | AWS SAM |
 
 ---
 
-## 🚀 Quick Start
+## 🚀 로컬 개발 시작
 
-### Prerequisites
+### 사전 요구사항
 
 - Node.js 20+
 - Python 3.13+
-- AWS CLI configured with credentials
+- AWS CLI (자격 증명 설정 완료)
 - AWS SAM CLI
-- AWS account with Bedrock model access
+- Bedrock 모델 접근 권한
 
-### 1. Clone the Repository
-
-```bash
-git clone https://github.com/alstjd9615-code/minseongkim-dev.git
-cd minseongkim-dev
-```
-
-### 2. Install Dependencies
+### 1. 의존성 설치
 
 ```bash
-# Frontend
 npm install
-
-# Backend (if testing locally)
-cd backend
-pip install -r requirements.txt
 ```
 
-### 3. Configure Environment
+### 2. 환경 변수 설정
 
-Create a `.env.local` file in the root directory:
+`.env.local` 파일 생성:
 
 ```env
 VITE_API_BASE_URL=https://your-api-gateway-url.amazonaws.com/dev
@@ -137,39 +135,25 @@ VITE_USER_POOL_CLIENT_ID=your-cognito-client-id
 VITE_AWS_REGION=ap-northeast-2
 ```
 
-### 4. Deploy Backend (AWS)
+### 3. 프론트엔드 개발 서버
+
+```bash
+npm run dev
+# http://localhost:5173 에서 확인
+```
+
+### 4. 백엔드 배포 (AWS SAM)
 
 ```bash
 cd infrastructure
-
-# Build Lambda functions
 sam build
-
-# Deploy to AWS (first time - interactive)
-sam deploy --guided
-
-# Save the output values (API URL, Cognito Pool ID, etc.)
+sam deploy --guided   # 최초 배포 시
+# 이후: sam deploy
 ```
 
-The deployment will output:
-- `ApiUrl`: Your API Gateway endpoint
-- `UserPoolId`: Cognito User Pool ID
-- `UserPoolClientId`: Cognito App Client ID
-- `FrontendBucketName`: S3 bucket for frontend
+배포 후 출력된 `ApiUrl`, `UserPoolId`, `UserPoolClientId` 값을 `.env.local`에 입력.
 
-Update your `.env.local` with these values.
-
-### 5. Run Frontend Locally
-
-```bash
-# Development mode
-npm run dev
-
-# Build for production
-npm run build
-```
-
-### 6. Deploy Frontend to S3
+### 5. 프론트엔드 빌드 & 배포
 
 ```bash
 npm run build
@@ -178,242 +162,141 @@ aws s3 sync dist/ s3://<FrontendBucketName>/ --delete
 
 ---
 
-## 📁 Project Structure
+## 📁 프로젝트 구조
 
 ```
 .
-├── src/                          # Frontend React Application
-│   ├── api/                      # API client modules
-│   │   ├── chat.ts               # Chat API
-│   │   ├── portfolio.ts          # Portfolio API
-│   │   ├── diary.ts              # Diary API
-│   │   ├── blog.ts               # Blog API
-│   │   └── stats.ts              # Analytics API
-│   ├── components/               # React components
-│   │   ├── Auth/                 # Authentication UI
-│   │   ├── Chat/                 # Chat interface
-│   │   ├── Portfolio/            # Portfolio viewer (Notion-style)
-│   │   ├── Diary/                # Diary management
-│   │   ├── Blog/                 # Blog editor & viewer
-│   │   └── Dashboard/            # Analytics dashboard
-│   ├── contexts/                 # React Context providers
-│   ├── hooks/                    # Custom React hooks
-│   ├── lib/                      # Utilities (auth, helpers)
-│   └── types/                    # TypeScript definitions
+├── src/
+│   ├── api/                    # API 클라이언트
+│   │   ├── chat.ts
+│   │   ├── portfolio.ts
+│   │   ├── diary.ts
+│   │   ├── blog.ts
+│   │   ├── stats.ts
+│   │   ├── workout.ts          # 신규
+│   │   ├── knowledge.ts        # 신규
+│   │   └── goals.ts            # 신규
+│   ├── components/
+│   │   ├── Auth/
+│   │   ├── Chat/               # AI 어시스턴트 + 포트폴리오 빌더
+│   │   ├── Portfolio/
+│   │   ├── Diary/
+│   │   ├── Blog/
+│   │   ├── Dashboard/
+│   │   ├── Workout/            # 신규 — 운동 관리
+│   │   ├── Knowledge/          # 신규 — 지식 관리
+│   │   └── Goals/              # 신규 — 목표 관리
+│   ├── hooks/
+│   │   ├── useChat.ts
+│   │   ├── useDiary.ts
+│   │   ├── useStats.ts
+│   │   ├── useWorkout.ts       # 신규
+│   │   ├── useKnowledge.ts     # 신규
+│   │   └── useGoals.ts         # 신규
+│   ├── contexts/
+│   ├── lib/
+│   └── types/index.ts          # 모든 타입 정의
 │
-├── backend/                      # Backend Lambda Functions
-│   ├── functions/
-│   │   ├── chat/                 # AI chat handler (Bedrock)
-│   │   ├── portfolio/            # Portfolio CRUD
-│   │   ├── diary/                # Diary CRUD
-│   │   ├── blog/                 # AI blog generator
-│   │   ├── blog_publish/         # External publishing
-│   │   ├── public_blog/          # Public blog viewer
-│   │   ├── stats/                # Analytics
-│   │   └── public/               # Public APIs
-│   └── requirements.txt          # Python dependencies
+├── backend/functions/
+│   ├── chat/
+│   ├── portfolio/
+│   ├── diary/
+│   ├── blog/
+│   ├── blog_publish/
+│   ├── public/
+│   ├── public_blog/
+│   ├── stats/
+│   ├── workout/                # 신규
+│   ├── knowledge/              # 신규
+│   └── goals/                  # 신규
 │
-├── infrastructure/               # AWS Infrastructure
-│   ├── template.yaml             # SAM/CloudFormation template
-│   └── samconfig.toml            # SAM deployment config
-│
-└── .github/
-    └── workflows/
-        └── deploy.yml            # CI/CD pipeline
+└── infrastructure/
+    └── template.yaml           # SAM 템플릿 (모든 리소스)
 ```
 
 ---
 
-## 🔧 Configuration
+## 🔧 환경 변수
 
-### Environment Variables
+### Frontend (`.env.local`)
 
-#### Frontend (`.env.local`)
+| 변수 | 설명 |
+|------|------|
+| `VITE_API_BASE_URL` | API Gateway 엔드포인트 |
+| `VITE_USER_POOL_ID` | Cognito User Pool ID |
+| `VITE_USER_POOL_CLIENT_ID` | Cognito App Client ID |
+| `VITE_AWS_REGION` | AWS 리전 (기본: ap-northeast-2) |
 
-| Variable | Description | Example |
-|----------|-------------|---------|
-| `VITE_API_BASE_URL` | API Gateway endpoint | `https://xxx.execute-api.ap-northeast-2.amazonaws.com/dev` |
-| `VITE_USER_POOL_ID` | Cognito User Pool ID | `ap-northeast-2_xxxxxxxxx` |
-| `VITE_USER_POOL_CLIENT_ID` | Cognito App Client ID | `xxxxxxxxxxxxxxxxxxxxxxxxxx` |
-| `VITE_AWS_REGION` | AWS region | `ap-northeast-2` |
+### Backend Lambda 환경 변수 (template.yaml에서 자동 설정)
 
-#### Backend (AWS Lambda Environment Variables)
-
-Set in `infrastructure/template.yaml`:
-
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `SESSIONS_TABLE` | DynamoDB sessions table | `portfolio-sessions` |
-| `PORTFOLIOS_TABLE` | DynamoDB portfolios table | `portfolio-data` |
-| `DIARY_TABLE` | DynamoDB diary table | `portfolio-diary` |
-| `BLOG_TABLE` | DynamoDB blog table | `portfolio-blog` |
-| `BEDROCK_MODEL_ID` | Bedrock model identifier | `anthropic.claude-3-5-sonnet-20240620-v1:0` |
-| `MAX_TOKENS` | Max AI response tokens | `4096` |
-| `CORS_ORIGIN` | CORS allowed origin | `*` |
+| 변수 | 설명 |
+|------|------|
+| `DIARY_TABLE` | DynamoDB 일상 기록 테이블 |
+| `BLOG_TABLE` | DynamoDB 블로그 테이블 |
+| `WORKOUT_TABLE` | DynamoDB 운동 기록 테이블 |
+| `KNOWLEDGE_TABLE` | DynamoDB 지식 관리 테이블 |
+| `GOALS_TABLE` | DynamoDB 목표 관리 테이블 |
+| `BEDROCK_MODEL_ID` | Bedrock 모델 ID |
 
 ---
 
-## 🎯 API Endpoints
+## 🎯 API 엔드포인트
 
-| Method | Endpoint | Description | Auth |
-|--------|----------|-------------|------|
-| `POST` | `/chat` | Send chat message to AI | ✅ |
-| `GET` | `/portfolio/:id` | Get portfolio | ✅ |
-| `PUT` | `/portfolio/:id` | Update portfolio | ✅ |
-| `POST` | `/diary` | Create diary entry | ✅ |
-| `GET` | `/diary` | List diary entries | ✅ |
-| `POST` | `/blog` | Generate blog from diary | ✅ |
-| `GET` | `/blog` | List blog posts | ✅ |
-| `PUT` | `/blog/:id` | Update blog post | ✅ |
-| `DELETE` | `/blog/:id` | Delete blog post | ✅ |
-| `POST` | `/blog/:id/publish/:platform` | Publish to external platform | ✅ |
-| `GET` | `/public/blog/:userId` | Public blog list | ❌ |
-| `GET` | `/public/blog/:userId/:postId` | Public blog post | ❌ |
-| `GET` | `/stats` | User statistics | ✅ |
+| Method | Endpoint | 설명 |
+|--------|----------|------|
+| `POST` | `/chat` | AI 채팅 (포트폴리오 빌더) |
+| `GET/PUT` | `/portfolio/:id` | 포트폴리오 조회/수정 |
+| `POST/GET` | `/diary` | 일상 기록 |
+| `POST/GET/PUT/DELETE` | `/blog[/:id]` | 블로그 관리 |
+| `POST/GET/DELETE` | `/workout[/:id]` | 운동 기록 |
+| `POST/GET/DELETE` | `/knowledge[/:id]` | 지식 관리 |
+| `POST/GET/PUT/DELETE` | `/goals[/:id]` | 목표 관리 |
+| `GET` | `/stats` | 통계 |
 
 ---
 
-## 🔐 Security
-
-- **Authentication**: AWS Cognito with JWT tokens
-- **Authorization**: Lambda authorizers validate tokens
-- **CORS**: Configurable allowed origins
-- **S3**: Private buckets with CloudFront OAC (Origin Access Control)
-- **API Rate Limiting**: API Gateway throttling enabled
-- **Input Validation**: All user inputs sanitized
-- **HTTPS Only**: Enforced via CloudFront
-
----
-
-## 🚢 Deployment
-
-### Manual Deployment
+## 🛠️ 개발 명령어
 
 ```bash
-# Build and deploy backend
-cd infrastructure
-sam build && sam deploy
-
-# Build and deploy frontend
-npm run build
-aws s3 sync dist/ s3://<bucket-name>/ --delete
-
-# Invalidate CloudFront cache
-aws cloudfront create-invalidation \
-  --distribution-id <distribution-id> \
-  --paths "/*"
-```
-
-### Automated Deployment (GitHub Actions)
-
-Push to `main` branch triggers automatic deployment:
-
-1. **Detect Changes**: Determines if backend or frontend changed
-2. **Deploy Backend**: Runs `sam build` and `sam deploy`
-3. **Deploy Frontend**: Builds React app and syncs to S3
-4. **Cache Invalidation**: Invalidates CloudFront cache
-
----
-
-## 🧪 Testing
-
-```bash
-# Run linter
-npm run lint
-
-# Type check
-npx tsc --noEmit
-
-# Build test
-npm run build
-```
-
----
-
-## 📊 AWS Services Used
-
-- **Compute**: AWS Lambda
-- **AI/ML**: Amazon Bedrock (Claude 3.5 Sonnet)
-- **Database**: Amazon DynamoDB
-- **API**: Amazon API Gateway
-- **CDN**: Amazon CloudFront
-- **Storage**: Amazon S3
-- **Authentication**: Amazon Cognito
-- **Monitoring**: Amazon CloudWatch
-- **Infrastructure**: AWS SAM / CloudFormation
-
----
-
-## 🛠️ Development
-
-### Local Development
-
-```bash
-# Start frontend dev server
+# 프론트엔드 개발 서버
 npm run dev
 
-# The app will be available at http://localhost:5173
+# 린트
+npm run lint
+
+# 타입 체크
+npx tsc --noEmit
+
+# 빌드
+npm run build
 ```
 
-### Backend Testing
-
-```bash
-# Invoke Lambda locally (requires SAM CLI)
-cd infrastructure
-sam local invoke ChatFunction --event events/chat-event.json
-```
-
 ---
 
-## 📝 Contributing
+## 🗺️ 로드맵
 
-Contributions are welcome! Please feel free to submit a Pull Request.
-
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
-
----
-
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
----
-
-## 🙏 Acknowledgments
-
-- Built with [Amazon Bedrock](https://aws.amazon.com/bedrock/) and Claude 3.5 Sonnet
-- UI inspired by [Notion](https://www.notion.so/)
-- Deployed on AWS Serverless infrastructure
+- [x] AI 포트폴리오 빌더
+- [x] 일상 기록 (AI 자동 분류)
+- [x] AI 블로그 생성기
+- [x] 대시보드 (활동 통계)
+- [x] 라이트 모드 + 사이드바 레이아웃
+- [x] 운동 관리
+- [x] 지식 관리 (AI 자동 요약)
+- [x] 목표 관리 (진행률 추적)
+- [ ] AI 종합 주간/월간 리포트
+- [ ] 운동 AI 루틴 추천
+- [ ] 커리어 성장 AI 분석
+- [ ] 모바일 반응형 개선
 
 ---
 
 ## 📧 Contact
 
-**MinSeong Kim** - [@alstjd9615-code](https://github.com/alstjd9615-code)
+**MinSeong Kim** — [@alstjd9615-code](https://github.com/alstjd9615-code)
 
-Project Link: [https://github.com/alstjd9615-code/minseongkim-dev](https://github.com/alstjd9615-code/minseongkim-dev)
-
----
-
-## 🗺️ Roadmap
-
-- [x] AI Portfolio Generation
-- [x] Daily Journal
-- [x] AI Blog Generator
-- [x] Analytics Dashboard
-- [x] CI/CD Pipeline
-- [ ] Blog Editor with Rich Text
-- [ ] Image Upload to S3
-- [ ] External Platform Publishing (Medium, Tistory)
-- [ ] SEO Optimization
-- [ ] PDF Export
-- [ ] Multi-language Support
-- [ ] Mobile App (React Native)
+Project: [https://github.com/alstjd9615-code/minseongkim-dev](https://github.com/alstjd9615-code/minseongkim-dev)
 
 ---
 
-Made with ❤️ using AWS and AI
+Made with ❤️ using AWS & AI — 개인 전용 라이프 매니저
+

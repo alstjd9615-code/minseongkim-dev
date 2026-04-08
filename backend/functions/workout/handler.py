@@ -88,9 +88,9 @@ def handler(event: dict[str, Any], context: Any) -> dict[str, Any]:  # noqa: ARG
         try:
             duration_min = int(body.get("durationMin", 0))
         except (ValueError, TypeError):
-            return _response(400, {"message": "'durationMin' must be a positive integer"})
+            return _response(400, {"message": "'durationMin' must be a valid integer"})
         if duration_min <= 0:
-            return _response(400, {"message": "'durationMin' must be a positive integer"})
+            return _response(400, {"message": "'durationMin' must be a positive integer (> 0)"})
 
         intensity: str = body.get("intensity", "보통").strip()
         if intensity not in VALID_INTENSITIES:
