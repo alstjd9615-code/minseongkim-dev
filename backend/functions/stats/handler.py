@@ -9,7 +9,6 @@ from __future__ import annotations
 import json
 import logging
 import os
-from collections import defaultdict  # noqa: F401
 from datetime import datetime, timedelta, timezone
 from typing import Any
 
@@ -131,7 +130,7 @@ def handler(event: dict[str, Any], context: Any) -> dict[str, Any]:  # noqa: ARG
     goals_items = _query_table(GOALS_TABLE, user_id)
     goals_active = sum(1 for g in goals_items if g.get("status") == "진행중")
     goals_done = sum(1 for g in goals_items if g.get("status") == "완료")
-    progress_values = [int(g.get("progress", 0)) for g in goals_items if goals_items]
+    progress_values = [int(g.get("progress", 0)) for g in goals_items]
     goals_avg_progress = int(sum(progress_values) / len(progress_values)) if progress_values else 0
 
     # ── Knowledge stats ────────────────────────────────────────────────────

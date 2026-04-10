@@ -48,8 +48,8 @@ export function ChatInterface({
         {!session || session.messages.length === 0 ? (
           <div className={styles.emptyState}>
             <span>{emptyStateIcon}</span>
-            <p>{emptyStateText.split('\n').map((line, i) => (
-              <span key={i}>{line}{i < emptyStateText.split('\n').length - 1 ? <br /> : null}</span>
+            <p>{emptyStateText.split('\n').map((line, i, arr) => (
+              <span key={i}>{line}{i < arr.length - 1 ? <br /> : null}</span>
             ))}</p>
           </div>
         ) : (
