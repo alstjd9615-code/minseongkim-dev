@@ -1,10 +1,16 @@
 import { useEffect, useState } from 'react';
-import type { DiaryCategory, DiaryEntry } from '../../types';
+import type { DiaryCategory, DiaryEntry, DiaryMood } from '../../types';
 import { DIARY_CATEGORIES } from '../../types';
 import { useDiary } from '../../hooks/useDiary';
 import { DiaryInput } from './DiaryInput';
 import { CategoryBadge } from './CategoryBadge';
 import styles from './Diary.module.css';
+
+const MOOD_EMOJI: Record<DiaryMood, string> = {
+  '좋음': '😊',
+  '보통': '😐',
+  '나쁨': '😔',
+};
 
 export function DiaryList() {
   const { entries, isSubmitting, isLoading, error, submit, loadEntries } = useDiary();
@@ -15,8 +21,8 @@ export function DiaryList() {
     void loadEntries(activeFilter);
   }, [loadEntries, activeFilter]);
 
-  const handleSubmit = async (content: string) => {
-    const entry = await submit(content);
+  const handleSubmit = async (content: string, mood?: DiaryMood) => {
+    const entry = await submit(content, mood);
     if (entry) {
       setLastEntry(entry);
       setTimeout(() => setLastEntry(null), 4000);
@@ -79,6 +85,11 @@ function EntryCard({ entry }: { entry: DiaryEntry }) {
     <div className={styles.entryCard}>
       <div className={styles.entryMeta}>
         <CategoryBadge category={entry.category} size="sm" />
+        {entry.mood && (
+          <span className={styles.entryMood} title={entry.mood}>
+            {MOOD_EMOJI[entry.mood]}
+          </span>
+        )}
         <span className={styles.entryDate}>
           {new Date(entry.createdAt).toLocaleDateString('ko-KR', {
             month: 'short',

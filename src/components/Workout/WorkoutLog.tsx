@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useWorkout } from '../../hooks/useWorkout';
 import type { CreateWorkoutRequest, WorkoutEntry, WorkoutIntensity, WorkoutType } from '../../types';
 import { WORKOUT_TYPES, WORKOUT_INTENSITIES } from '../../types';
+import { WorkoutWeeklyChart } from './WorkoutWeeklyChart';
 import styles from './Workout.module.css';
 
 export function WorkoutLog() {
@@ -68,6 +69,12 @@ export function WorkoutLog() {
           <div className={styles.overviewValue}>{thisWeek}</div>
           <div className={styles.overviewLabel}>이번 주 운동 횟수</div>
         </div>
+      </div>
+
+      {/* 이번 주 운동 차트 */}
+      <div className={styles.chartSection}>
+        <h3 className={styles.chartTitle}>📊 이번 주 운동 현황</h3>
+        <WorkoutWeeklyChart entries={entries} />
       </div>
 
       {/* 입력 폼 */}

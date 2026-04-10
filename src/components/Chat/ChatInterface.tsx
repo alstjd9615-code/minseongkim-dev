@@ -10,9 +10,23 @@ interface ChatInterfaceProps {
   error: string | null;
   onSend: (text: string) => void;
   onReset: () => void;
+  title?: string;
+  emptyStateIcon?: string;
+  emptyStateText?: string;
+  placeholder?: string;
 }
 
-export function ChatInterface({ session, isLoading, error, onSend, onReset }: ChatInterfaceProps) {
+export function ChatInterface({
+  session,
+  isLoading,
+  error,
+  onSend,
+  onReset,
+  title = '💬 AI 포트폴리오 생성',
+  emptyStateIcon = '✨',
+  emptyStateText = 'AI에게 자신을 소개해주세요.\n포트폴리오를 자동으로 생성해드립니다.',
+  placeholder,
+}: ChatInterfaceProps) {
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -22,7 +36,7 @@ export function ChatInterface({ session, isLoading, error, onSend, onReset }: Ch
   return (
     <div className={styles.chatPanel}>
       <div className={styles.chatHeader}>
-        <h2>💬 AI 포트폴리오 생성</h2>
+        <h2>{title}</h2>
         {session && (
           <button className={styles.resetButton} onClick={onReset}>
             새로 시작
@@ -33,8 +47,10 @@ export function ChatInterface({ session, isLoading, error, onSend, onReset }: Ch
       <div className={styles.messageList}>
         {!session || session.messages.length === 0 ? (
           <div className={styles.emptyState}>
-            <span>✨</span>
-            <p>AI에게 자신을 소개해주세요.<br />포트폴리오를 자동으로 생성해드립니다.</p>
+            <span>{emptyStateIcon}</span>
+            <p>{emptyStateText.split('\n').map((line, i) => (
+              <span key={i}>{line}{i < emptyStateText.split('\n').length - 1 ? <br /> : null}</span>
+            ))}</p>
           </div>
         ) : (
           session.messages.map(msg => (
@@ -56,7 +72,7 @@ export function ChatInterface({ session, isLoading, error, onSend, onReset }: Ch
       {error && <div className={styles.errorBanner}>⚠️ {error}</div>}
 
       <div className={styles.inputArea}>
-        <ChatInput onSend={onSend} disabled={isLoading} />
+        <ChatInput onSend={onSend} disabled={isLoading} placeholder={placeholder} />
       </div>
     </div>
   );

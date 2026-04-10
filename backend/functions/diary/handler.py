@@ -28,6 +28,7 @@ MODEL_ID = os.environ.get("BEDROCK_MODEL_ID", "anthropic.claude-3-5-sonnet-20240
 MAX_TOKENS = int(os.environ.get("MAX_TOKENS", "512"))
 
 VALID_CATEGORIES = {"독서", "운동", "프로젝트", "시사", "목표", "아이디어"}
+VALID_MOODS = {"좋음", "보통", "나쁨"}
 
 CLASSIFICATION_PROMPT = """당신은 일상 기록을 분류하는 AI입니다.
 사용자의 일상 입력을 읽고 아래 6가지 카테고리 중 하나로 분류하고, 한 줄 요약과 태그를 추출하세요.
@@ -126,6 +127,10 @@ def handler(event: dict[str, Any], context: Any) -> dict[str, Any]:  # noqa: ARG
         if len(content) > 5000:
             return _response(400, {"message": "Content too long (max 5000 characters)"})
 
+        mood: str | None = body.get("mood")
+        if mood is not None and mood not in VALID_MOODS:
+            return _response(400, {"message": f"Invalid mood. Must be one of: {', '.join(VALID_MOODS)}"})
+
         try:
             classification = _classify_with_bedrock(content)
         except (ClientError, json.JSONDecodeError, KeyError) as exc:
@@ -144,6 +149,8 @@ def handler(event: dict[str, Any], context: Any) -> dict[str, Any]:  # noqa: ARG
             "createdAt": now,
             "updatedAt": now,
         }
+        if mood:
+            item["mood"] = mood
 
         table = dynamodb.Table(DIARY_TABLE)
         try:

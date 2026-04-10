@@ -4,6 +4,7 @@ import { StatsCards } from './StatsCards';
 import { CategoryBarChart } from './CategoryBarChart';
 import { CategoryPieChart } from './CategoryPieChart';
 import { ActivityHeatmap } from './ActivityHeatmap';
+import { RecentActivityTimeline } from './RecentActivityTimeline';
 import styles from './Dashboard.module.css';
 
 export function Dashboard() {
@@ -32,20 +33,23 @@ export function Dashboard() {
     <div className={styles.dashboardPanel}>
       <div className={styles.dashboardHeader}>
         <h2>📊 대시보드</h2>
-        <p>나의 일상 기록 통계를 한눈에 확인하세요</p>
+        <p>나의 활동 통계를 한눈에 확인하세요</p>
       </div>
 
-      {stats.total === 0 ? (
+      {stats.total === 0 && stats.workoutThisWeek === 0 && stats.knowledgeTotal === 0 ? (
         <div className={styles.emptyState}>
           <span>📊</span>
-          <p>아직 기록이 없습니다.<br />일상 기록 탭에서 첫 번째 기록을 남겨보세요!</p>
+          <p>아직 기록이 없습니다.<br />각 섹션에서 첫 번째 기록을 남겨보세요!</p>
         </div>
       ) : (
         <>
           <StatsCards
             total={stats.total}
             streak={stats.streak}
-            mostActiveCategory={stats.mostActiveCategory}
+            workoutThisWeek={stats.workoutThisWeek}
+            goalsActive={stats.goalsActive}
+            goalsDone={stats.goalsDone}
+            knowledgeTotal={stats.knowledgeTotal}
           />
 
           <div className={styles.chartsRow}>
@@ -62,6 +66,11 @@ export function Dashboard() {
           <div className={styles.heatmapCard}>
             <h3 className={styles.heatmapTitle}>최근 30일 활동</h3>
             <ActivityHeatmap data={stats.dailyActivity} />
+          </div>
+
+          <div className={styles.timelineCard}>
+            <h3 className={styles.timelineCardTitle}>📋 최근 활동</h3>
+            <RecentActivityTimeline items={stats.recentActivity} />
           </div>
         </>
       )}
