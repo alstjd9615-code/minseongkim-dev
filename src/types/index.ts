@@ -59,12 +59,17 @@ export interface DiaryEntry {
   summary: string;
   tags: string[];
   originalContent: string;
+  mood?: DiaryMood;
   createdAt: string;
   updatedAt: string;
 }
 
+export type DiaryMood = '좋음' | '보통' | '나쁨';
+export const DIARY_MOODS: DiaryMood[] = ['좋음', '보통', '나쁨'];
+
 export interface CreateDiaryRequest {
   content: string;
+  mood?: DiaryMood;
 }
 
 export interface DiaryListResponse {
@@ -240,11 +245,34 @@ export interface DailyActivity {
   count: number;
 }
 
+export interface RecentActivityItem {
+  type: 'diary' | 'workout' | 'goal' | 'knowledge';
+  title: string;
+  createdAt: string;
+}
+
 export interface StatsResponse {
   total: number;
   streak: number;
   mostActiveCategory: DiaryCategory | null;
   categoryBreakdown: CategoryStat[];
   dailyActivity: DailyActivity[];
+  workoutThisWeek: number;
+  goalsActive: number;
+  goalsDone: number;
+  goalsAvgProgress: number;
+  knowledgeTotal: number;
+  recentActivity: RecentActivityItem[];
+}
+
+export interface AssistantRequest {
+  sessionId?: string;
+  message: string;
+  context?: string;
+}
+
+export interface AssistantResponse {
+  sessionId: string;
+  message: Message;
 }
 

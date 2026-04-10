@@ -379,6 +379,31 @@ Resources:
             Auth:
               Authorizer: NONE
 
+  AssistantFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "lifemanager-assistant-${Environment}"
+      CodeUri: ../backend/functions/assistant/
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Description: "General-purpose AI life manager assistant via Bedrock"
+      Events:
+        AssistantPost:
+          Type: Api
+          Properties:
+            RestApiId: !Ref PortfolioApi
+            Path: /assistant
+            Method: POST
+            Auth:
+              Authorizer: CognitoAuthorizer
+        AssistantOptions:
+          Type: Api
+          Properties:
+            RestApiId: !Ref PortfolioApi
+            Path: /assistant
+            Method: OPTIONS
+            Auth:
+              Authorizer: NONE
+
   PortfolioFunction:
     Type: AWS::Serverless::Function
     Properties:

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useChat } from './hooks/useChat';
+import { useAssistant } from './hooks/useAssistant';
 import { useAuth } from './contexts/useAuth';
 import { AuthGuard } from './components/Auth/AuthGuard';
 import { ChatInterface } from './components/Chat/ChatInterface';
@@ -25,6 +26,26 @@ const SECTION_LABELS: Record<Section, string> = {
   dashboard: '📊 대시보드',
 };
 
+const ASSISTANT_CONTEXT: Record<Section, string> = {
+  workout: '사용자가 현재 운동 관리 페이지를 보고 있습니다.',
+  goals: '사용자가 현재 목표 관리 페이지를 보고 있습니다.',
+  dashboard: '사용자가 현재 대시보드를 보고 있습니다.',
+  diary: '사용자가 현재 일상 기록 페이지를 보고 있습니다.',
+  knowledge: '사용자가 현재 지식 관리 페이지를 보고 있습니다.',
+  assistant: '사용자가 AI 어시스턴트와 자유롭게 대화하고 있습니다.',
+  career: '사용자가 현재 커리어/포트폴리오 페이지를 보고 있습니다.',
+};
+
+const ASSISTANT_EMPTY_TEXT: Record<Section, string> = {
+  workout: '오늘 운동 기록할까요?\n운동에 대해 무엇이든 물어보세요.',
+  goals: '목표 진행상황을 분석해드릴까요?\n달성하고 싶은 것을 말씀해주세요.',
+  dashboard: '전체 데이터를 분석해드릴까요?\n궁금한 것을 물어보세요.',
+  diary: '오늘 하루는 어떠셨나요?\n일상을 기록해드릴게요.',
+  knowledge: '학습 내용 정리를 도와드릴까요?\n배운 것을 말씀해주세요.',
+  assistant: '무엇이든 물어보세요!\n당신의 AI 라이프 매니저입니다.',
+  career: '커리어에 대해 궁금한 점이 있으신가요?\n포트폴리오 개선을 도와드립니다.',
+};
+
 function getGreeting(): string {
   const hour = new Date().getHours();
   if (hour < 6) return '🌙 좋은 새벽이에요';
@@ -44,6 +65,7 @@ function formatDate(): string {
 
 function AppContent() {
   const { session, portfolio, isLoading, error, send, reset } = useChat();
+  const assistant = useAssistant();
   const { user, logout } = useAuth();
   const [activeSection, setActiveSection] = useState<Section>('career');
   const [careerPage, setCareerPage] = useState<CareerPage>('portfolio');
@@ -248,11 +270,15 @@ function AppContent() {
           {activeSection === 'assistant' && (
             <div className="chatPane" style={{ flex: 1, borderRight: 'none' }}>
               <ChatInterface
-                session={session}
-                isLoading={isLoading}
-                error={error}
-                onSend={send}
-                onReset={reset}
+                session={assistant.session}
+                isLoading={assistant.isLoading}
+                error={assistant.error}
+                onSend={text => void assistant.send(text, ASSISTANT_CONTEXT.assistant)}
+                onReset={assistant.reset}
+                title="🤖 AI 어시스턴트"
+                emptyStateIcon="🤖"
+                emptyStateText={ASSISTANT_EMPTY_TEXT.assistant}
+                placeholder="무엇이든 물어보세요..."
               />
             </div>
           )}

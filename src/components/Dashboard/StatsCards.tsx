@@ -1,37 +1,60 @@
-import type { CategoryStat, DiaryCategory } from '../../types';
+import type { CategoryStat, StatsResponse } from '../../types';
 import styles from './Dashboard.module.css';
 
-interface StatsCardsProps {
-  total: number;
-  streak: number;
-  mostActiveCategory: DiaryCategory | null;
-}
+type StatsCardsProps = Pick<
+  StatsResponse,
+  'total' | 'streak' | 'workoutThisWeek' | 'goalsActive' | 'goalsDone' | 'knowledgeTotal'
+>;
 
 const CATEGORY_EMOJI: Record<string, string> = {
   독서: '📚', 운동: '💪', 프로젝트: '🛠️', 시사: '📰', 목표: '🎯', 아이디어: '💡',
 };
 
-export function StatsCards({ total, streak, mostActiveCategory }: StatsCardsProps) {
+export function StatsCards({
+  total,
+  streak,
+  workoutThisWeek,
+  goalsActive,
+  goalsDone,
+  knowledgeTotal,
+}: StatsCardsProps) {
   return (
     <div className={styles.statsGrid}>
       <div className={styles.statCard}>
-        <span className={styles.statLabel}>총 기록 수</span>
+        <span className={styles.statIcon}>📓</span>
+        <span className={styles.statLabel}>총 일기 수</span>
         <span className={styles.statValue}>{total}</span>
         <span className={styles.statSub}>개의 일상 기록</span>
       </div>
       <div className={styles.statCard}>
-        <span className={styles.statLabel}>연속 기록</span>
+        <span className={styles.statIcon}>🔥</span>
+        <span className={styles.statLabel}>연속 기록 스트릭</span>
         <span className={styles.statValue}>{streak}일</span>
         <span className={styles.statSub}>현재 스트릭</span>
       </div>
       <div className={styles.statCard}>
-        <span className={styles.statLabel}>가장 많은 카테고리</span>
-        <span className={styles.statValue}>
-          {mostActiveCategory
-            ? `${CATEGORY_EMOJI[mostActiveCategory] ?? '📝'} ${mostActiveCategory}`
-            : '—'}
-        </span>
-        <span className={styles.statSub}>최다 활동 분야</span>
+        <span className={styles.statIcon}>💪</span>
+        <span className={styles.statLabel}>이번 주 운동</span>
+        <span className={styles.statValue}>{workoutThisWeek}</span>
+        <span className={styles.statSub}>회 운동 완료</span>
+      </div>
+      <div className={styles.statCard}>
+        <span className={styles.statIcon}>🎯</span>
+        <span className={styles.statLabel}>진행 중 목표</span>
+        <span className={styles.statValue}>{goalsActive}</span>
+        <span className={styles.statSub}>개 진행 중</span>
+      </div>
+      <div className={styles.statCard}>
+        <span className={styles.statIcon}>✅</span>
+        <span className={styles.statLabel}>달성한 목표</span>
+        <span className={styles.statValue}>{goalsDone}</span>
+        <span className={styles.statSub}>개 완료</span>
+      </div>
+      <div className={styles.statCard}>
+        <span className={styles.statIcon}>🧠</span>
+        <span className={styles.statLabel}>지식 항목 수</span>
+        <span className={styles.statValue}>{knowledgeTotal}</span>
+        <span className={styles.statSub}>개 기록됨</span>
       </div>
     </div>
   );

@@ -4,9 +4,10 @@ import styles from './Chat.module.css';
 interface ChatInputProps {
   onSend: (text: string) => void;
   disabled?: boolean;
+  placeholder?: string;
 }
 
-export function ChatInput({ onSend, disabled = false }: ChatInputProps) {
+export function ChatInput({ onSend, disabled = false, placeholder }: ChatInputProps) {
   const [value, setValue] = useState('');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -44,7 +45,7 @@ export function ChatInput({ onSend, disabled = false }: ChatInputProps) {
         onChange={e => setValue(e.target.value)}
         onKeyDown={handleKeyDown}
         onInput={handleInput}
-        placeholder="포트폴리오 정보를 입력하세요 (예: 이름, 경력, 기술 스택)..."
+        placeholder={placeholder ?? "포트폴리오 정보를 입력하세요 (예: 이름, 경력, 기술 스택)..."}
         rows={1}
         disabled={disabled}
       />

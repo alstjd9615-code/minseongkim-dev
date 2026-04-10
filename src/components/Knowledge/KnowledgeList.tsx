@@ -11,6 +11,7 @@ export function KnowledgeList() {
   const [author, setAuthor] = useState('');
   const [notes, setNotes] = useState('');
   const [filterType, setFilterType] = useState<KnowledgeType | '전체'>('전체');
+  const [searchQuery, setSearchQuery] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
 
   useEffect(() => {
@@ -31,7 +32,19 @@ export function KnowledgeList() {
     }
   };
 
-  const filtered = filterType === '전체' ? entries : entries.filter(e => e.knowledgeType === filterType);
+  const typeFiltered = filterType === '전체' ? entries : entries.filter(e => e.knowledgeType === filterType);
+  const filtered = searchQuery.trim()
+    ? typeFiltered.filter(e => {
+        const q = searchQuery.toLowerCase();
+        return (
+          e.title.toLowerCase().includes(q) ||
+          (e.author?.toLowerCase().includes(q) ?? false) ||
+          e.notes.toLowerCase().includes(q) ||
+          (e.aiSummary?.toLowerCase().includes(q) ?? false) ||
+          e.tags.some(t => t.toLowerCase().includes(q))
+        );
+      })
+    : typeFiltered;
 
   const books = entries.filter(e => e.knowledgeType === '책').length;
   const articles = entries.filter(e => e.knowledgeType === '아티클').length;
@@ -122,6 +135,18 @@ export function KnowledgeList() {
 
       {successMsg && <div className={styles.successToast}>{successMsg}</div>}
       {error && <div className={styles.error}>⚠️ {error}</div>}
+
+      {/* 검색 */}
+      <div className={styles.searchRow}>
+        <span className={styles.searchIcon}>🔍</span>
+        <input
+          type="text"
+          className={styles.searchInput}
+          value={searchQuery}
+          onChange={e => setSearchQuery(e.target.value)}
+          placeholder="제목, 저자, 내용 검색..."
+        />
+      </div>
 
       {/* 타입 필터 */}
       <div className={styles.typeFilter}>

@@ -1,13 +1,13 @@
 import { useState, useCallback } from 'react';
 import { createDiaryEntry, getDiaryEntries } from '../api/diary';
-import type { DiaryEntry, DiaryCategory } from '../types';
+import type { DiaryEntry, DiaryCategory, DiaryMood } from '../types';
 
 interface UseDiaryReturn {
   entries: DiaryEntry[];
   isSubmitting: boolean;
   isLoading: boolean;
   error: string | null;
-  submit: (content: string) => Promise<DiaryEntry | null>;
+  submit: (content: string, mood?: DiaryMood) => Promise<DiaryEntry | null>;
   loadEntries: (category?: DiaryCategory) => Promise<void>;
   clearError: () => void;
 }
@@ -18,12 +18,12 @@ export function useDiary(): UseDiaryReturn {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const submit = useCallback(async (content: string): Promise<DiaryEntry | null> => {
+  const submit = useCallback(async (content: string, mood?: DiaryMood): Promise<DiaryEntry | null> => {
     if (!content.trim()) return null;
     setIsSubmitting(true);
     setError(null);
     try {
-      const entry = await createDiaryEntry({ content: content.trim() });
+      const entry = await createDiaryEntry({ content: content.trim(), mood });
       setEntries(prev => [entry, ...prev]);
       return entry;
     } catch (err) {
