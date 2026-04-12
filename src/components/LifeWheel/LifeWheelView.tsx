@@ -112,7 +112,7 @@ export function LifeWheelView() {
                 fill="var(--accent)"
                 fillOpacity={0.35}
               />
-              <Tooltip formatter={(v) => [`${String(v)}점`, '점수']} />
+              <Tooltip formatter={(v) => [`${String(v)}점`]} />
             </RadarChart>
           </ResponsiveContainer>
         </div>

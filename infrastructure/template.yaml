@@ -403,27 +403,17 @@ Resources:
           AttributeType: S
         - AttributeName: journalType
           AttributeType: S
-        - AttributeName: createdAt
-          AttributeType: S
       KeySchema:
         - AttributeName: userId
           KeyType: HASH
         - AttributeName: journalId
           KeyType: RANGE
       GlobalSecondaryIndexes:
-        - IndexName: journalType-createdAt-index
+        - IndexName: userId-journalType-index
           KeySchema:
             - AttributeName: userId
               KeyType: HASH
             - AttributeName: journalType
-              KeyType: RANGE
-          Projection:
-            ProjectionType: ALL
-        - IndexName: createdAt-index
-          KeySchema:
-            - AttributeName: userId
-              KeyType: HASH
-            - AttributeName: createdAt
               KeyType: RANGE
           Projection:
             ProjectionType: ALL

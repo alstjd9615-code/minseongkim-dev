@@ -139,7 +139,7 @@ def handler(event: dict[str, Any], context: Any) -> dict[str, Any]:  # noqa: ARG
         try:
             if filter_type and filter_type in VALID_TYPES:
                 result = table.query(
-                    IndexName="journalType-createdAt-index",
+                    IndexName="userId-journalType-index",
                     KeyConditionExpression=(
                         boto3.dynamodb.conditions.Key("userId").eq(user_id)
                         & boto3.dynamodb.conditions.Key("journalType").eq(filter_type)
@@ -152,6 +152,8 @@ def handler(event: dict[str, Any], context: Any) -> dict[str, Any]:  # noqa: ARG
                     ScanIndexForward=False,
                 )
             items = result.get("Items", [])
+            # Sort by createdAt descending since GSI range key is journalType
+            items.sort(key=lambda x: x.get("createdAt", ""), reverse=True)
         except ClientError as exc:
             logger.error("DynamoDB query error: %s", exc)
             return _response(500, {"message": "Failed to retrieve journal entries"})
