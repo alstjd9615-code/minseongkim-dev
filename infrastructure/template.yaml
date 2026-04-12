@@ -30,6 +30,7 @@ Globals:
         HABITS_TABLE: !Ref HabitsTable
         TASKS_TABLE: !Ref TasksTable
         JOURNAL_TABLE: !Ref JournalTable
+        PROJECTS_TABLE: !Ref ProjectsTable
         CORS_ORIGIN: !Ref AllowedOrigin
         BEDROCK_REGION: !Ref AWS::Region
         BEDROCK_MODEL_ID: "anthropic.claude-3-5-sonnet-20240620-v1:0"
@@ -421,6 +422,26 @@ Resources:
         - Key: Environment
           Value: !Ref Environment
 
+  ProjectsTable:
+    Type: AWS::DynamoDB::Table
+    DeletionPolicy: Retain
+    Properties:
+      TableName: !Sub "lifemanager-projects-${Environment}"
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: userId
+          AttributeType: S
+        - AttributeName: projectId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: userId
+          KeyType: HASH
+        - AttributeName: projectId
+          KeyType: RANGE
+      Tags:
+        - Key: Environment
+          Value: !Ref Environment
+
   # ── IAM Role (shared by Lambda functions) ───────────────────────────────
   LambdaExecutionRole:
     Type: AWS::IAM::Role
@@ -465,6 +486,7 @@ Resources:
                   - !GetAtt TasksTable.Arn
                   - !GetAtt JournalTable.Arn
                   - !Sub "${JournalTable.Arn}/index/*"
+                  - !GetAtt ProjectsTable.Arn
         - PolicyName: BedrockAccess
           PolicyDocument:
             Version: '2012-10-17'
@@ -1201,6 +1223,63 @@ Resources:
           Properties:
             RestApiId: !Ref PortfolioApi
             Path: /journal/{journalId}
+            Method: OPTIONS
+            Auth:
+              Authorizer: NONE
+
+  ProjectsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "lifemanager-projects-${Environment}"
+      CodeUri: ../backend/functions/projects/
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Description: "Projects CRUD"
+      Events:
+        ProjectsPost:
+          Type: Api
+          Properties:
+            RestApiId: !Ref PortfolioApi
+            Path: /projects
+            Method: POST
+            Auth:
+              Authorizer: CognitoAuthorizer
+        ProjectsGet:
+          Type: Api
+          Properties:
+            RestApiId: !Ref PortfolioApi
+            Path: /projects
+            Method: GET
+            Auth:
+              Authorizer: CognitoAuthorizer
+        ProjectsPut:
+          Type: Api
+          Properties:
+            RestApiId: !Ref PortfolioApi
+            Path: /projects/{projectId}
+            Method: PUT
+            Auth:
+              Authorizer: CognitoAuthorizer
+        ProjectsDelete:
+          Type: Api
+          Properties:
+            RestApiId: !Ref PortfolioApi
+            Path: /projects/{projectId}
+            Method: DELETE
+            Auth:
+              Authorizer: CognitoAuthorizer
+        ProjectsOptions:
+          Type: Api
+          Properties:
+            RestApiId: !Ref PortfolioApi
+            Path: /projects
+            Method: OPTIONS
+            Auth:
+              Authorizer: NONE
+        ProjectsItemOptions:
+          Type: Api
+          Properties:
+            RestApiId: !Ref PortfolioApi
+            Path: /projects/{projectId}
             Method: OPTIONS
             Auth:
               Authorizer: NONE

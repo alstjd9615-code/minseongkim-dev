@@ -66,6 +66,25 @@ const ASSISTANT_EMPTY_TEXT: Record<Section, string> = {
   journal: '회고 내용을 정리해드릴까요?\n이번 주/달을 돌아보세요.',
 };
 
+// 상단 탭바에 표시할 주요 탭
+const TOP_TABS: { id: Section; label: string; icon: string }[] = [
+  { id: 'career',    label: '커리어',       icon: '💼' },
+  { id: 'goals',     label: '목표',         icon: '🎯' },
+  { id: 'workout',   label: '운동',         icon: '💪' },
+  { id: 'diary',     label: '일상기록',     icon: '📓' },
+  { id: 'knowledge', label: '지식관리',     icon: '🧠' },
+  { id: 'assistant', label: 'AI 어시스턴트', icon: '🤖' },
+];
+
+// 모바일 하단 탭바 (5개)
+const BOTTOM_TABS: { id: Section; label: string; icon: string }[] = [
+  { id: 'career',    label: '커리어',  icon: '💼' },
+  { id: 'goals',     label: '목표',    icon: '🎯' },
+  { id: 'workout',   label: '운동',    icon: '💪' },
+  { id: 'diary',     label: '일상',    icon: '📓' },
+  { id: 'assistant', label: 'AI',      icon: '🤖' },
+];
+
 function getGreeting(): string {
   const hour = new Date().getHours();
   if (hour < 6) return '🌙 좋은 새벽이에요';
@@ -89,17 +108,12 @@ function AppContent() {
   const { user, logout } = useAuth();
   const [activeSection, setActiveSection] = useState<Section>('career');
   const [careerPage, setCareerPage] = useState<CareerPage>('portfolio');
-  const [careerOpen, setCareerOpen] = useState(true);
 
   const email = user?.signInDetails?.loginId ?? '';
   const avatarLetter = email.charAt(0).toUpperCase();
 
-  const handleSectionClick = (section: Section) => {
-    if (section === 'career') {
-      setCareerOpen(prev => !prev);
-    } else {
-      setActiveSection(section);
-    }
+  const handleTabClick = (section: Section) => {
+    setActiveSection(section);
   };
 
   const handleCareerPageClick = (page: CareerPage) => {
@@ -116,161 +130,33 @@ function AppContent() {
 
   return (
     <div className="appLayout">
-      {/* ── 사이드바 ─────────────────────────────── */}
-      <aside className="sidebar">
-        <div className="sidebarLogo">
-          <div className="sidebarLogoTitle">
-            <span className="sidebarLogoIcon">🧬</span>
-            <div>
-              <div className="sidebarLogoText">AI 라이프 매니저</div>
-              <div className="sidebarLogoSub">Personal Manager</div>
-            </div>
-          </div>
+      {/* ── 상단 탭 네비게이션 ────────────────────── */}
+      <header className="topBar">
+        <div className="topBarBrand">
+          <span className="topBarIcon">🧬</span>
+          <span className="topBarTitle">AI 라이프 매니저</span>
         </div>
 
-        <nav className="sidebarNav">
-          {/* 💼 커리어 */}
-          <button
-            className={`navItem ${activeSection === 'career' ? 'navItemActive' : ''}`}
-            onClick={() => handleSectionClick('career')}
-          >
-            <span className="navItemIcon">💼</span>
-            <span className="navItemLabel">커리어</span>
-            <span className={`navItemChevron ${careerOpen ? 'navItemChevronOpen' : ''}`}>▶</span>
-          </button>
-          {careerOpen && (
-            <div className="subNav">
-              <button
-                className={`subNavItem ${activeSection === 'career' && careerPage === 'portfolio' ? 'subNavItemActive' : ''}`}
-                onClick={() => handleCareerPageClick('portfolio')}
-              >
-                📄 포트폴리오
-              </button>
-              <button
-                className={`subNavItem ${activeSection === 'career' && careerPage === 'blog' ? 'subNavItemActive' : ''}`}
-                onClick={() => handleCareerPageClick('blog')}
-              >
-                ✍️ 블로그
-              </button>
-            </div>
-          )}
-
-          {/* 🧠 지식 관리 */}
-          <button
-            className={`navItem ${activeSection === 'knowledge' ? 'navItemActive' : ''}`}
-            onClick={() => handleSectionClick('knowledge')}
-          >
-            <span className="navItemIcon">🧠</span>
-            <span className="navItemLabel">지식 관리</span>
-          </button>
-
-          {/* 💪 운동 */}
-          <button
-            className={`navItem ${activeSection === 'workout' ? 'navItemActive' : ''}`}
-            onClick={() => handleSectionClick('workout')}
-          >
-            <span className="navItemIcon">💪</span>
-            <span className="navItemLabel">운동</span>
-          </button>
-
-          {/* 🎯 목표 */}
-          <button
-            className={`navItem ${activeSection === 'goals' ? 'navItemActive' : ''}`}
-            onClick={() => handleSectionClick('goals')}
-          >
-            <span className="navItemIcon">🎯</span>
-            <span className="navItemLabel">목표</span>
-          </button>
-
-          {/* 🤖 AI 어시스턴트 */}
-          <button
-            className={`navItem ${activeSection === 'assistant' ? 'navItemActive' : ''}`}
-            onClick={() => handleSectionClick('assistant')}
-          >
-            <span className="navItemIcon">🤖</span>
-            <span className="navItemLabel">AI 어시스턴트</span>
-          </button>
-
-          {/* 구분선 */}
-          <div style={{ borderTop: '1px solid var(--sidebar-border)', margin: '8px 4px' }} />
-
-          {/* 🎡 Life Wheel */}
-          <button
-            className={`navItem ${activeSection === 'lifewheel' ? 'navItemActive' : ''}`}
-            onClick={() => handleSectionClick('lifewheel')}
-          >
-            <span className="navItemIcon">🎡</span>
-            <span className="navItemLabel">Life Wheel</span>
-          </button>
-
-          {/* 🏮 만다라트 */}
-          <button
-            className={`navItem ${activeSection === 'mandalart' ? 'navItemActive' : ''}`}
-            onClick={() => handleSectionClick('mandalart')}
-          >
-            <span className="navItemIcon">🏮</span>
-            <span className="navItemLabel">만다라트</span>
-          </button>
-
-          {/* 🌱 습관 트래커 */}
-          <button
-            className={`navItem ${activeSection === 'habits' ? 'navItemActive' : ''}`}
-            onClick={() => handleSectionClick('habits')}
-          >
-            <span className="navItemIcon">🌱</span>
-            <span className="navItemLabel">습관 트래커</span>
-          </button>
-
-          {/* ⚡ 우선순위 */}
-          <button
-            className={`navItem ${activeSection === 'tasks' ? 'navItemActive' : ''}`}
-            onClick={() => handleSectionClick('tasks')}
-          >
-            <span className="navItemIcon">⚡</span>
-            <span className="navItemLabel">우선순위</span>
-          </button>
-
-          {/* 📖 저널 */}
-          <button
-            className={`navItem ${activeSection === 'journal' ? 'navItemActive' : ''}`}
-            onClick={() => handleSectionClick('journal')}
-          >
-            <span className="navItemIcon">📖</span>
-            <span className="navItemLabel">저널</span>
-          </button>
-
-          {/* 구분선 */}
-          <div style={{ borderTop: '1px solid var(--sidebar-border)', margin: '8px 4px' }} />
-
-          {/* 📓 일상 기록 */}
-          <button
-            className={`navItem ${activeSection === 'diary' ? 'navItemActive' : ''}`}
-            onClick={() => handleSectionClick('diary')}
-          >
-            <span className="navItemIcon">📓</span>
-            <span className="navItemLabel">일상 기록</span>
-          </button>
-
-          {/* 📊 대시보드 */}
-          <button
-            className={`navItem ${activeSection === 'dashboard' ? 'navItemActive' : ''}`}
-            onClick={() => handleSectionClick('dashboard')}
-          >
-            <span className="navItemIcon">📊</span>
-            <span className="navItemLabel">대시보드</span>
-          </button>
+        <nav className="tabBar">
+          {TOP_TABS.map(tab => (
+            <button
+              key={tab.id}
+              className={`tabItem${activeSection === tab.id ? ' tabItemActive' : ''}`}
+              onClick={() => handleTabClick(tab.id)}
+            >
+              <span className="tabItemIcon">{tab.icon}</span>
+              <span className="tabItemLabel">{tab.label}</span>
+            </button>
+          ))}
         </nav>
 
-        <div className="sidebarUser">
-          <div className="sidebarUserAvatar">{avatarLetter}</div>
-          <div className="sidebarUserInfo">
-            <div className="sidebarUserEmail">{email}</div>
-          </div>
-          <button className="sidebarLogoutBtn" onClick={() => void logout()}>
+        <div className="topBarUser">
+          <div className="topBarAvatar">{avatarLetter}</div>
+          <button className="topBarLogoutBtn" onClick={() => void logout()}>
             나가기
           </button>
         </div>
-      </aside>
+      </header>
 
       {/* ── 메인 영역 ─────────────────────────────── */}
       <div className="mainArea">
@@ -287,30 +173,49 @@ function AppContent() {
 
         {/* 콘텐츠 */}
         <div className="contentPane">
-          {/* 💼 커리어 > 포트폴리오 */}
-          {activeSection === 'career' && careerPage === 'portfolio' && (
+          {/* 💼 커리어 */}
+          {activeSection === 'career' && (
             <>
-              <div className="chatPane">
-                <ChatInterface
-                  session={session}
-                  isLoading={isLoading}
-                  error={error}
-                  onSend={send}
-                  onReset={reset}
-                />
+              {/* 커리어 서브탭 */}
+              <div className="subTabBar">
+                <button
+                  className={`subTabItem${careerPage === 'portfolio' ? ' subTabItemActive' : ''}`}
+                  onClick={() => handleCareerPageClick('portfolio')}
+                >
+                  📄 포트폴리오
+                </button>
+                <button
+                  className={`subTabItem${careerPage === 'blog' ? ' subTabItemActive' : ''}`}
+                  onClick={() => handleCareerPageClick('blog')}
+                >
+                  ✍️ 블로그
+                </button>
               </div>
-              <div className="divider" />
-              <div className="portfolioPane">
-                <PortfolioView portfolio={portfolio} />
-              </div>
-            </>
-          )}
 
-          {/* 💼 커리어 > 블로그 */}
-          {activeSection === 'career' && careerPage === 'blog' && (
-            <div className="fullPane">
-              <BlogList />
-            </div>
+              {careerPage === 'portfolio' && (
+                <div className="careerPane">
+                  <div className="chatPane">
+                    <ChatInterface
+                      session={session}
+                      isLoading={isLoading}
+                      error={error}
+                      onSend={send}
+                      onReset={reset}
+                    />
+                  </div>
+                  <div className="divider" />
+                  <div className="portfolioPane">
+                    <PortfolioView portfolio={portfolio} />
+                  </div>
+                </div>
+              )}
+
+              {careerPage === 'blog' && (
+                <div className="fullPane">
+                  <BlogList />
+                </div>
+              )}
+            </>
           )}
 
           {/* 🧠 지식 관리 */}
@@ -401,6 +306,20 @@ function AppContent() {
           )}
         </div>
       </div>
+
+      {/* ── 모바일 하단 탭바 ──────────────────────── */}
+      <nav className="bottomTabBar">
+        {BOTTOM_TABS.map(tab => (
+          <button
+            key={tab.id}
+            className={`bottomTabItem${activeSection === tab.id ? ' bottomTabItemActive' : ''}`}
+            onClick={() => handleTabClick(tab.id)}
+          >
+            <span className="bottomTabIcon">{tab.icon}</span>
+            <span className="bottomTabLabel">{tab.label}</span>
+          </button>
+        ))}
+      </nav>
     </div>
   );
 }
