@@ -419,7 +419,7 @@ export interface TaskListResponse {
 
 // ── Journal types ─────────────────────────────────────────────────────────────
 
-export type JournalType = 'weekly' | 'monthly' | 'kpt';
+export type JournalType = 'weekly' | 'monthly' | 'quarterly' | 'kpt';
 
 export interface KPTContent {
   keep: string;
@@ -458,5 +458,67 @@ export interface UpdateJournalRequest {
 
 export interface JournalListResponse {
   entries: JournalEntry[];
+  count: number;
+}
+
+// ── Project types ─────────────────────────────────────────────────────────────
+
+export type ProjectStatus = '계획' | '진행중' | '완료' | '보류';
+export type MilestoneStatus = '미완료' | '완료';
+
+export const PROJECT_STATUSES: ProjectStatus[] = ['계획', '진행중', '완료', '보류'];
+
+export interface ProjectTask {
+  taskId: string;
+  title: string;
+  completed: boolean;
+  dueDate?: string;
+}
+
+export interface ProjectMilestone {
+  milestoneId: string;
+  title: string;
+  status: MilestoneStatus;
+  dueDate?: string;
+  tasks: ProjectTask[];
+}
+
+export interface ProjectEntry {
+  userId: string;
+  projectId: string;
+  title: string;
+  description: string;
+  status: ProjectStatus;
+  progress: number;
+  milestones: ProjectMilestone[];
+  tags: string[];
+  startDate?: string;
+  dueDate?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateProjectRequest {
+  title: string;
+  description?: string;
+  status?: ProjectStatus;
+  startDate?: string;
+  dueDate?: string;
+  tags?: string[];
+}
+
+export interface UpdateProjectRequest {
+  title?: string;
+  description?: string;
+  status?: ProjectStatus;
+  progress?: number;
+  milestones?: ProjectMilestone[];
+  tags?: string[];
+  startDate?: string;
+  dueDate?: string;
+}
+
+export interface ProjectListResponse {
+  entries: ProjectEntry[];
   count: number;
 }

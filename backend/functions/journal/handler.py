@@ -25,7 +25,7 @@ logger.setLevel(logging.INFO)
 dynamodb = boto3.resource("dynamodb", region_name=os.environ.get("AWS_REGION", "us-east-1"))
 JOURNAL_TABLE = os.environ.get("JOURNAL_TABLE", "lifemanager-journal")
 
-VALID_TYPES = {"weekly", "monthly", "kpt"}
+VALID_TYPES = {"weekly", "monthly", "quarterly", "kpt"}
 
 
 def _now_iso() -> str:

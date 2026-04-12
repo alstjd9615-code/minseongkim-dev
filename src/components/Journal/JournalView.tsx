@@ -6,6 +6,7 @@ import styles from './Journal.module.css';
 const TAB_LABELS: { type: JournalType; label: string; icon: string }[] = [
   { type: 'weekly', label: '주간 회고', icon: '📅' },
   { type: 'monthly', label: '월간 회고', icon: '📆' },
+  { type: 'quarterly', label: '분기 회고', icon: '🗓️' },
   { type: 'kpt', label: 'KPT', icon: '🔄' },
 ];
 
