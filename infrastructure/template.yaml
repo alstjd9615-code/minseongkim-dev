@@ -25,6 +25,11 @@ Globals:
         WORKOUT_TABLE: !Ref WorkoutTable
         KNOWLEDGE_TABLE: !Ref KnowledgeTable
         GOALS_TABLE: !Ref GoalsTable
+        LIFEWHEEL_TABLE: !Ref LifeWheelTable
+        MANDALART_TABLE: !Ref MandalartTable
+        HABITS_TABLE: !Ref HabitsTable
+        TASKS_TABLE: !Ref TasksTable
+        JOURNAL_TABLE: !Ref JournalTable
         CORS_ORIGIN: !Ref AllowedOrigin
         BEDROCK_REGION: !Ref AWS::Region
         BEDROCK_MODEL_ID: "anthropic.claude-3-5-sonnet-20240620-v1:0"
@@ -305,6 +310,127 @@ Resources:
         - Key: Environment
           Value: !Ref Environment
 
+  LifeWheelTable:
+    Type: AWS::DynamoDB::Table
+    DeletionPolicy: Retain
+    Properties:
+      TableName: !Sub "lifemanager-lifewheel-${Environment}"
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: userId
+          AttributeType: S
+        - AttributeName: wheelId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: userId
+          KeyType: HASH
+        - AttributeName: wheelId
+          KeyType: RANGE
+      Tags:
+        - Key: Environment
+          Value: !Ref Environment
+
+  MandalartTable:
+    Type: AWS::DynamoDB::Table
+    DeletionPolicy: Retain
+    Properties:
+      TableName: !Sub "lifemanager-mandalart-${Environment}"
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: userId
+          AttributeType: S
+        - AttributeName: mandalartId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: userId
+          KeyType: HASH
+        - AttributeName: mandalartId
+          KeyType: RANGE
+      Tags:
+        - Key: Environment
+          Value: !Ref Environment
+
+  HabitsTable:
+    Type: AWS::DynamoDB::Table
+    DeletionPolicy: Retain
+    Properties:
+      TableName: !Sub "lifemanager-habits-${Environment}"
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: userId
+          AttributeType: S
+        - AttributeName: habitId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: userId
+          KeyType: HASH
+        - AttributeName: habitId
+          KeyType: RANGE
+      Tags:
+        - Key: Environment
+          Value: !Ref Environment
+
+  TasksTable:
+    Type: AWS::DynamoDB::Table
+    DeletionPolicy: Retain
+    Properties:
+      TableName: !Sub "lifemanager-tasks-${Environment}"
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: userId
+          AttributeType: S
+        - AttributeName: taskId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: userId
+          KeyType: HASH
+        - AttributeName: taskId
+          KeyType: RANGE
+      Tags:
+        - Key: Environment
+          Value: !Ref Environment
+
+  JournalTable:
+    Type: AWS::DynamoDB::Table
+    DeletionPolicy: Retain
+    Properties:
+      TableName: !Sub "lifemanager-journal-${Environment}"
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: userId
+          AttributeType: S
+        - AttributeName: journalId
+          AttributeType: S
+        - AttributeName: journalType
+          AttributeType: S
+        - AttributeName: createdAt
+          AttributeType: S
+      KeySchema:
+        - AttributeName: userId
+          KeyType: HASH
+        - AttributeName: journalId
+          KeyType: RANGE
+      GlobalSecondaryIndexes:
+        - IndexName: journalType-createdAt-index
+          KeySchema:
+            - AttributeName: userId
+              KeyType: HASH
+            - AttributeName: journalType
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+        - IndexName: createdAt-index
+          KeySchema:
+            - AttributeName: userId
+              KeyType: HASH
+            - AttributeName: createdAt
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+      Tags:
+        - Key: Environment
+          Value: !Ref Environment
+
   # ── IAM Role (shared by Lambda functions) ───────────────────────────────
   LambdaExecutionRole:
     Type: AWS::IAM::Role
@@ -343,6 +469,12 @@ Resources:
                   - !GetAtt WorkoutTable.Arn
                   - !GetAtt KnowledgeTable.Arn
                   - !GetAtt GoalsTable.Arn
+                  - !GetAtt LifeWheelTable.Arn
+                  - !GetAtt MandalartTable.Arn
+                  - !GetAtt HabitsTable.Arn
+                  - !GetAtt TasksTable.Arn
+                  - !GetAtt JournalTable.Arn
+                  - !Sub "${JournalTable.Arn}/index/*"
         - PolicyName: BedrockAccess
           PolicyDocument:
             Version: '2012-10-17'
@@ -805,6 +937,283 @@ Resources:
             Method: OPTIONS
             Auth:
               Authorizer: NONE
+
+  LifeWheelFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "lifemanager-lifewheel-${Environment}"
+      CodeUri: ../backend/functions/lifewheel/
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Description: "Life Wheel CRUD"
+      Events:
+        LifeWheelPost:
+          Type: Api
+          Properties:
+            RestApiId: !Ref PortfolioApi
+            Path: /lifewheel
+            Method: POST
+            Auth:
+              Authorizer: CognitoAuthorizer
+        LifeWheelGet:
+          Type: Api
+          Properties:
+            RestApiId: !Ref PortfolioApi
+            Path: /lifewheel
+            Method: GET
+            Auth:
+              Authorizer: CognitoAuthorizer
+        LifeWheelDelete:
+          Type: Api
+          Properties:
+            RestApiId: !Ref PortfolioApi
+            Path: /lifewheel/{wheelId}
+            Method: DELETE
+            Auth:
+              Authorizer: CognitoAuthorizer
+        LifeWheelOptions:
+          Type: Api
+          Properties:
+            RestApiId: !Ref PortfolioApi
+            Path: /lifewheel
+            Method: OPTIONS
+            Auth:
+              Authorizer: NONE
+        LifeWheelItemOptions:
+          Type: Api
+          Properties:
+            RestApiId: !Ref PortfolioApi
+            Path: /lifewheel/{wheelId}
+            Method: OPTIONS
+            Auth:
+              Authorizer: NONE
+
+  MandalartFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "lifemanager-mandalart-${Environment}"
+      CodeUri: ../backend/functions/mandalart/
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Description: "Mandalart CRUD"
+      Events:
+        MandalartPost:
+          Type: Api
+          Properties:
+            RestApiId: !Ref PortfolioApi
+            Path: /mandalart
+            Method: POST
+            Auth:
+              Authorizer: CognitoAuthorizer
+        MandalartGet:
+          Type: Api
+          Properties:
+            RestApiId: !Ref PortfolioApi
+            Path: /mandalart
+            Method: GET
+            Auth:
+              Authorizer: CognitoAuthorizer
+        MandalartPut:
+          Type: Api
+          Properties:
+            RestApiId: !Ref PortfolioApi
+            Path: /mandalart/{mandalartId}
+            Method: PUT
+            Auth:
+              Authorizer: CognitoAuthorizer
+        MandalartDelete:
+          Type: Api
+          Properties:
+            RestApiId: !Ref PortfolioApi
+            Path: /mandalart/{mandalartId}
+            Method: DELETE
+            Auth:
+              Authorizer: CognitoAuthorizer
+        MandalartOptions:
+          Type: Api
+          Properties:
+            RestApiId: !Ref PortfolioApi
+            Path: /mandalart
+            Method: OPTIONS
+            Auth:
+              Authorizer: NONE
+        MandalartItemOptions:
+          Type: Api
+          Properties:
+            RestApiId: !Ref PortfolioApi
+            Path: /mandalart/{mandalartId}
+            Method: OPTIONS
+            Auth:
+              Authorizer: NONE
+
+  HabitsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "lifemanager-habits-${Environment}"
+      CodeUri: ../backend/functions/habits/
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Description: "Habits tracker CRUD"
+      Events:
+        HabitsPost:
+          Type: Api
+          Properties:
+            RestApiId: !Ref PortfolioApi
+            Path: /habits
+            Method: POST
+            Auth:
+              Authorizer: CognitoAuthorizer
+        HabitsGet:
+          Type: Api
+          Properties:
+            RestApiId: !Ref PortfolioApi
+            Path: /habits
+            Method: GET
+            Auth:
+              Authorizer: CognitoAuthorizer
+        HabitsPut:
+          Type: Api
+          Properties:
+            RestApiId: !Ref PortfolioApi
+            Path: /habits/{habitId}
+            Method: PUT
+            Auth:
+              Authorizer: CognitoAuthorizer
+        HabitsDelete:
+          Type: Api
+          Properties:
+            RestApiId: !Ref PortfolioApi
+            Path: /habits/{habitId}
+            Method: DELETE
+            Auth:
+              Authorizer: CognitoAuthorizer
+        HabitsOptions:
+          Type: Api
+          Properties:
+            RestApiId: !Ref PortfolioApi
+            Path: /habits
+            Method: OPTIONS
+            Auth:
+              Authorizer: NONE
+        HabitsItemOptions:
+          Type: Api
+          Properties:
+            RestApiId: !Ref PortfolioApi
+            Path: /habits/{habitId}
+            Method: OPTIONS
+            Auth:
+              Authorizer: NONE
+
+  TasksFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "lifemanager-tasks-${Environment}"
+      CodeUri: ../backend/functions/tasks/
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Description: "Eisenhower matrix tasks CRUD"
+      Events:
+        TasksPost:
+          Type: Api
+          Properties:
+            RestApiId: !Ref PortfolioApi
+            Path: /tasks
+            Method: POST
+            Auth:
+              Authorizer: CognitoAuthorizer
+        TasksGet:
+          Type: Api
+          Properties:
+            RestApiId: !Ref PortfolioApi
+            Path: /tasks
+            Method: GET
+            Auth:
+              Authorizer: CognitoAuthorizer
+        TasksPut:
+          Type: Api
+          Properties:
+            RestApiId: !Ref PortfolioApi
+            Path: /tasks/{taskId}
+            Method: PUT
+            Auth:
+              Authorizer: CognitoAuthorizer
+        TasksDelete:
+          Type: Api
+          Properties:
+            RestApiId: !Ref PortfolioApi
+            Path: /tasks/{taskId}
+            Method: DELETE
+            Auth:
+              Authorizer: CognitoAuthorizer
+        TasksOptions:
+          Type: Api
+          Properties:
+            RestApiId: !Ref PortfolioApi
+            Path: /tasks
+            Method: OPTIONS
+            Auth:
+              Authorizer: NONE
+        TasksItemOptions:
+          Type: Api
+          Properties:
+            RestApiId: !Ref PortfolioApi
+            Path: /tasks/{taskId}
+            Method: OPTIONS
+            Auth:
+              Authorizer: NONE
+
+  JournalFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "lifemanager-journal-${Environment}"
+      CodeUri: ../backend/functions/journal/
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Description: "Journal entries CRUD"
+      Events:
+        JournalPost:
+          Type: Api
+          Properties:
+            RestApiId: !Ref PortfolioApi
+            Path: /journal
+            Method: POST
+            Auth:
+              Authorizer: CognitoAuthorizer
+        JournalGet:
+          Type: Api
+          Properties:
+            RestApiId: !Ref PortfolioApi
+            Path: /journal
+            Method: GET
+            Auth:
+              Authorizer: CognitoAuthorizer
+        JournalPut:
+          Type: Api
+          Properties:
+            RestApiId: !Ref PortfolioApi
+            Path: /journal/{journalId}
+            Method: PUT
+            Auth:
+              Authorizer: CognitoAuthorizer
+        JournalDelete:
+          Type: Api
+          Properties:
+            RestApiId: !Ref PortfolioApi
+            Path: /journal/{journalId}
+            Method: DELETE
+            Auth:
+              Authorizer: CognitoAuthorizer
+        JournalOptions:
+          Type: Api
+          Properties:
+            RestApiId: !Ref PortfolioApi
+            Path: /journal
+            Method: OPTIONS
+            Auth:
+              Authorizer: NONE
+        JournalItemOptions:
+          Type: Api
+          Properties:
+            RestApiId: !Ref PortfolioApi
+            Path: /journal/{journalId}
+            Method: OPTIONS
+            Auth:
+              Authorizer: NONE
   PortfolioApi:
     Type: AWS::Serverless::Api
     Properties:
@@ -984,6 +1393,36 @@ Outputs:
     Value: !Ref GoalsTable
     Export:
       Name: !Sub "${AWS::StackName}-GoalsTable"
+
+  LifeWheelTableName:
+    Description: "DynamoDB life wheel table name"
+    Value: !Ref LifeWheelTable
+    Export:
+      Name: !Sub "${AWS::StackName}-LifeWheelTable"
+
+  MandalartTableName:
+    Description: "DynamoDB mandalart table name"
+    Value: !Ref MandalartTable
+    Export:
+      Name: !Sub "${AWS::StackName}-MandalartTable"
+
+  HabitsTableName:
+    Description: "DynamoDB habits table name"
+    Value: !Ref HabitsTable
+    Export:
+      Name: !Sub "${AWS::StackName}-HabitsTable"
+
+  TasksTableName:
+    Description: "DynamoDB tasks table name"
+    Value: !Ref TasksTable
+    Export:
+      Name: !Sub "${AWS::StackName}-TasksTable"
+
+  JournalTableName:
+    Description: "DynamoDB journal table name"
+    Value: !Ref JournalTable
+    Export:
+      Name: !Sub "${AWS::StackName}-JournalTable"
 
   UserPoolId:
     Description: "Cognito User Pool ID"

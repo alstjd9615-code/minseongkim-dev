@@ -276,3 +276,187 @@ export interface AssistantResponse {
   message: Message;
 }
 
+
+// ── Life Wheel types ──────────────────────────────────────────────────────────
+
+export const LIFE_WHEEL_DOMAINS = ['건강', '재정', '커리어', '관계', '성장', '여가', '환경', '정신/영적'] as const;
+export type LifeWheelDomain = typeof LIFE_WHEEL_DOMAINS[number];
+
+export interface LifeWheelScores {
+  건강: number;
+  재정: number;
+  커리어: number;
+  관계: number;
+  성장: number;
+  여가: number;
+  환경: number;
+  '정신/영적': number;
+}
+
+export interface LifeWheelEntry {
+  userId: string;
+  wheelId: string;
+  scores: LifeWheelScores;
+  note?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateLifeWheelRequest {
+  scores: LifeWheelScores;
+  note?: string;
+}
+
+export interface LifeWheelListResponse {
+  entries: LifeWheelEntry[];
+  count: number;
+}
+
+// ── Mandalart types ───────────────────────────────────────────────────────────
+
+export interface MandalartCell {
+  text: string;
+  completed: boolean;
+}
+
+export interface MandalartEntry {
+  userId: string;
+  mandalartId: string;
+  title: string;
+  cells: MandalartCell[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateMandalartRequest {
+  title: string;
+  cells?: MandalartCell[];
+}
+
+export interface UpdateMandalartRequest {
+  title?: string;
+  cells?: MandalartCell[];
+}
+
+export interface MandalartListResponse {
+  entries: MandalartEntry[];
+  count: number;
+}
+
+// ── Habit types ───────────────────────────────────────────────────────────────
+
+export interface HabitEntry {
+  userId: string;
+  habitId: string;
+  name: string;
+  icon: string;
+  color: string;
+  checkDates: string[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateHabitRequest {
+  name: string;
+  icon?: string;
+  color?: string;
+}
+
+export interface UpdateHabitRequest {
+  name?: string;
+  icon?: string;
+  color?: string;
+  checkDate?: string;
+}
+
+export interface HabitListResponse {
+  entries: HabitEntry[];
+  count: number;
+}
+
+// ── Task (Eisenhower) types ───────────────────────────────────────────────────
+
+export type TaskQuadrant = 'Q1' | 'Q2' | 'Q3' | 'Q4';
+export const TASK_QUADRANTS: { id: TaskQuadrant; label: string; desc: string; urgent: boolean; important: boolean }[] = [
+  { id: 'Q1', label: '즉시 실행', desc: '중요 + 긴급', urgent: true, important: true },
+  { id: 'Q2', label: '계획', desc: '중요 + 여유', urgent: false, important: true },
+  { id: 'Q3', label: '위임', desc: '긴급 + 덜 중요', urgent: true, important: false },
+  { id: 'Q4', label: '제거', desc: '낮은 우선순위', urgent: false, important: false },
+];
+
+export interface TaskEntry {
+  userId: string;
+  taskId: string;
+  title: string;
+  urgent: boolean;
+  important: boolean;
+  quadrant: TaskQuadrant;
+  completed: boolean;
+  dueDate?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateTaskRequest {
+  title: string;
+  urgent: boolean;
+  important: boolean;
+  dueDate?: string;
+}
+
+export interface UpdateTaskRequest {
+  title?: string;
+  urgent?: boolean;
+  important?: boolean;
+  completed?: boolean;
+  dueDate?: string;
+}
+
+export interface TaskListResponse {
+  entries: TaskEntry[];
+  count: number;
+}
+
+// ── Journal types ─────────────────────────────────────────────────────────────
+
+export type JournalType = 'weekly' | 'monthly' | 'kpt';
+
+export interface KPTContent {
+  keep: string;
+  problem: string;
+  tryNext: string;
+}
+
+export interface JournalEntry {
+  userId: string;
+  journalId: string;
+  journalType: JournalType;
+  title: string;
+  content: string;
+  kpt?: KPTContent;
+  periodStart?: string;
+  periodEnd?: string;
+  aiInsight?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateJournalRequest {
+  journalType: JournalType;
+  title: string;
+  content?: string;
+  kpt?: KPTContent;
+  periodStart?: string;
+  periodEnd?: string;
+}
+
+export interface UpdateJournalRequest {
+  title?: string;
+  content?: string;
+  kpt?: KPTContent;
+}
+
+export interface JournalListResponse {
+  entries: JournalEntry[];
+  count: number;
+}
