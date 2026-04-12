@@ -11,9 +11,14 @@ import { BlogList } from './components/Blog/BlogList';
 import { WorkoutLog } from './components/Workout/WorkoutLog';
 import { KnowledgeList } from './components/Knowledge/KnowledgeList';
 import { GoalsList } from './components/Goals/GoalsList';
+import { LifeWheelView } from './components/LifeWheel/LifeWheelView';
+import { MandalartView } from './components/Mandalart/MandalartView';
+import { HabitsTracker } from './components/Habits/HabitsTracker';
+import { TaskMatrix } from './components/Tasks/TaskMatrix';
+import { JournalView } from './components/Journal/JournalView';
 import './App.css';
 
-type Section = 'career' | 'knowledge' | 'workout' | 'goals' | 'assistant' | 'diary' | 'dashboard';
+type Section = 'career' | 'knowledge' | 'workout' | 'goals' | 'assistant' | 'diary' | 'dashboard' | 'lifewheel' | 'mandalart' | 'habits' | 'tasks' | 'journal';
 type CareerPage = 'portfolio' | 'blog';
 
 const SECTION_LABELS: Record<Section, string> = {
@@ -24,6 +29,11 @@ const SECTION_LABELS: Record<Section, string> = {
   assistant: '🤖 AI 어시스턴트',
   diary: '📓 일상 기록',
   dashboard: '📊 대시보드',
+  lifewheel: '🎡 Life Wheel',
+  mandalart: '🏮 만다라트',
+  habits: '🌱 습관 트래커',
+  tasks: '⚡ 우선순위',
+  journal: '📖 저널',
 };
 
 const ASSISTANT_CONTEXT: Record<Section, string> = {
@@ -34,6 +44,11 @@ const ASSISTANT_CONTEXT: Record<Section, string> = {
   knowledge: '사용자가 현재 지식 관리 페이지를 보고 있습니다.',
   assistant: '사용자가 AI 어시스턴트와 자유롭게 대화하고 있습니다.',
   career: '사용자가 현재 커리어/포트폴리오 페이지를 보고 있습니다.',
+  lifewheel: '사용자가 인생의 수레바퀴 페이지를 보고 있습니다.',
+  mandalart: '사용자가 만다라트 목표 관리 페이지를 보고 있습니다.',
+  habits: '사용자가 습관 트래커 페이지를 보고 있습니다.',
+  tasks: '사용자가 아이젠하워 매트릭스 우선순위 페이지를 보고 있습니다.',
+  journal: '사용자가 저널 페이지를 보고 있습니다.',
 };
 
 const ASSISTANT_EMPTY_TEXT: Record<Section, string> = {
@@ -44,6 +59,11 @@ const ASSISTANT_EMPTY_TEXT: Record<Section, string> = {
   knowledge: '학습 내용 정리를 도와드릴까요?\n배운 것을 말씀해주세요.',
   assistant: '무엇이든 물어보세요!\n당신의 AI 라이프 매니저입니다.',
   career: '커리어에 대해 궁금한 점이 있으신가요?\n포트폴리오 개선을 도와드립니다.',
+  lifewheel: '인생의 수레바퀴 분석을 도와드릴까요?\n약한 영역을 말씀해주세요.',
+  mandalart: '만다라트 목표 세분화를 도와드릴까요?\n핵심 목표를 말씀해주세요.',
+  habits: '습관 패턴을 분석해드릴까요?\n습관에 대해 무엇이든 물어보세요.',
+  tasks: '할 일 우선순위 정리를 도와드릴까요?\n오늘 할 일을 말씀해주세요.',
+  journal: '회고 내용을 정리해드릴까요?\n이번 주/달을 돌아보세요.',
 };
 
 function getGreeting(): string {
@@ -174,6 +194,54 @@ function AppContent() {
           {/* 구분선 */}
           <div style={{ borderTop: '1px solid var(--sidebar-border)', margin: '8px 4px' }} />
 
+          {/* 🎡 Life Wheel */}
+          <button
+            className={`navItem ${activeSection === 'lifewheel' ? 'navItemActive' : ''}`}
+            onClick={() => handleSectionClick('lifewheel')}
+          >
+            <span className="navItemIcon">🎡</span>
+            <span className="navItemLabel">Life Wheel</span>
+          </button>
+
+          {/* 🏮 만다라트 */}
+          <button
+            className={`navItem ${activeSection === 'mandalart' ? 'navItemActive' : ''}`}
+            onClick={() => handleSectionClick('mandalart')}
+          >
+            <span className="navItemIcon">🏮</span>
+            <span className="navItemLabel">만다라트</span>
+          </button>
+
+          {/* 🌱 습관 트래커 */}
+          <button
+            className={`navItem ${activeSection === 'habits' ? 'navItemActive' : ''}`}
+            onClick={() => handleSectionClick('habits')}
+          >
+            <span className="navItemIcon">🌱</span>
+            <span className="navItemLabel">습관 트래커</span>
+          </button>
+
+          {/* ⚡ 우선순위 */}
+          <button
+            className={`navItem ${activeSection === 'tasks' ? 'navItemActive' : ''}`}
+            onClick={() => handleSectionClick('tasks')}
+          >
+            <span className="navItemIcon">⚡</span>
+            <span className="navItemLabel">우선순위</span>
+          </button>
+
+          {/* 📖 저널 */}
+          <button
+            className={`navItem ${activeSection === 'journal' ? 'navItemActive' : ''}`}
+            onClick={() => handleSectionClick('journal')}
+          >
+            <span className="navItemIcon">📖</span>
+            <span className="navItemLabel">저널</span>
+          </button>
+
+          {/* 구분선 */}
+          <div style={{ borderTop: '1px solid var(--sidebar-border)', margin: '8px 4px' }} />
+
           {/* 📓 일상 기록 */}
           <button
             className={`navItem ${activeSection === 'diary' ? 'navItemActive' : ''}`}
@@ -294,6 +362,41 @@ function AppContent() {
           {activeSection === 'dashboard' && (
             <div className="fullPane">
               <Dashboard />
+            </div>
+          )}
+
+          {/* 🎡 Life Wheel */}
+          {activeSection === 'lifewheel' && (
+            <div className="fullPane">
+              <LifeWheelView />
+            </div>
+          )}
+
+          {/* 🏮 만다라트 */}
+          {activeSection === 'mandalart' && (
+            <div className="fullPane">
+              <MandalartView />
+            </div>
+          )}
+
+          {/* 🌱 습관 트래커 */}
+          {activeSection === 'habits' && (
+            <div className="fullPane">
+              <HabitsTracker />
+            </div>
+          )}
+
+          {/* ⚡ 우선순위 매트릭스 */}
+          {activeSection === 'tasks' && (
+            <div className="fullPane">
+              <TaskMatrix />
+            </div>
+          )}
+
+          {/* 📖 저널 */}
+          {activeSection === 'journal' && (
+            <div className="fullPane">
+              <JournalView />
             </div>
           )}
         </div>
