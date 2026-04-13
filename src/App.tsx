@@ -11,12 +11,12 @@ import { BlogList } from './components/Blog/BlogList';
 import { WorkoutLog } from './components/Workout/WorkoutLog';
 import { KnowledgeList } from './components/Knowledge/KnowledgeList';
 import { GoalsList } from './components/Goals/GoalsList';
+import { HomeDashboard } from './components/Home/HomeDashboard';
 import { LifeWheelView } from './components/LifeWheel/LifeWheelView';
 import { MandalartView } from './components/Mandalart/MandalartView';
 import { HabitsTracker } from './components/Habits/HabitsTracker';
 import { TaskMatrix } from './components/Tasks/TaskMatrix';
 import { JournalView } from './components/Journal/JournalView';
-import { HomeDashboard } from './components/Home/HomeDashboard';
 import './App.css';
 
 type Section = 'home' | 'career' | 'knowledge' | 'workout' | 'goals' | 'assistant' | 'diary' | 'dashboard' | 'lifewheel' | 'mandalart' | 'habits' | 'tasks' | 'journal';
@@ -39,7 +39,7 @@ const SECTION_LABELS: Record<Section, string> = {
 };
 
 const ASSISTANT_CONTEXT: Record<Section, string> = {
-  home: '사용자가 현재 홈 대시보드를 보고 있습니다.',
+  home: '사용자가 홈 대시보드를 보고 있습니다.',
   workout: '사용자가 현재 운동 관리 페이지를 보고 있습니다.',
   goals: '사용자가 현재 목표 관리 페이지를 보고 있습니다.',
   dashboard: '사용자가 현재 대시보드를 보고 있습니다.',
@@ -55,7 +55,7 @@ const ASSISTANT_CONTEXT: Record<Section, string> = {
 };
 
 const ASSISTANT_EMPTY_TEXT: Record<Section, string> = {
-  home: '홈 대시보드에서 무엇이든 물어보세요.\n오늘의 일정을 도와드릴게요.',
+  home: '오늘 하루도 파이팅!\n무엇을 도와드릴까요?',
   workout: '오늘 운동 기록할까요?\n운동에 대해 무엇이든 물어보세요.',
   goals: '목표 진행상황을 분석해드릴까요?\n달성하고 싶은 것을 말씀해주세요.',
   dashboard: '전체 데이터를 분석해드릴까요?\n궁금한 것을 물어보세요.',
@@ -72,7 +72,7 @@ const ASSISTANT_EMPTY_TEXT: Record<Section, string> = {
 
 // 상단 탭바에 표시할 주요 탭
 const TOP_TABS: { id: Section; label: string; icon: string }[] = [
-  { id: 'home',      label: 'Home',         icon: '🏠' },
+  { id: 'home',      label: '홈',           icon: '🏠' },
   { id: 'career',    label: '커리어',       icon: '💼' },
   { id: 'goals',     label: '목표',         icon: '🎯' },
   { id: 'workout',   label: '운동',         icon: '💪' },
@@ -83,10 +83,10 @@ const TOP_TABS: { id: Section; label: string; icon: string }[] = [
 
 // 모바일 하단 탭바 (5개)
 const BOTTOM_TABS: { id: Section; label: string; icon: string }[] = [
+  { id: 'home',      label: '홈',      icon: '🏠' },
   { id: 'career',    label: '커리어',  icon: '💼' },
   { id: 'goals',     label: '목표',    icon: '🎯' },
   { id: 'workout',   label: '운동',    icon: '💪' },
-  { id: 'diary',     label: '일상',    icon: '📓' },
   { id: 'assistant', label: 'AI',      icon: '🤖' },
 ];
 
@@ -181,7 +181,7 @@ function AppContent() {
           {/* 🏠 홈 */}
           {activeSection === 'home' && (
             <div className="fullPane">
-              <HomeDashboard />
+              <HomeDashboard onNavigate={(s) => setActiveSection(s as Section)} />
             </div>
           )}
 
