@@ -25,6 +25,16 @@ function toDateStr(year: number, month: number, day: number): string {
   return `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
 }
 
+/** Parse a YYYY-MM-DD string as local time to avoid UTC-offset display issues */
+function toLocalDateLabel(dateStr: string): string {
+  const [year, month, day] = dateStr.split('-').map(Number);
+  return new Date(year, month - 1, day).toLocaleDateString('ko-KR', {
+    month: 'long',
+    day: 'numeric',
+    weekday: 'short',
+  });
+}
+
 export function CalendarView() {
   const { entries, isLoading, loadEntries } = useTasks();
   const [viewDate, setViewDate] = useState(() => new Date());
@@ -123,7 +133,7 @@ export function CalendarView() {
 
       <div className={styles.taskListCard}>
         <div className={styles.taskListHeader}>
-          📋 {new Date(selectedDate + 'T12:00:00').toLocaleDateString('ko-KR', { month: 'long', day: 'numeric', weekday: 'short' })} 태스크
+          📋 {toLocalDateLabel(selectedDate)} 태스크
         </div>
         {selectedTasks.length === 0 ? (
           <div className={styles.emptyMessage}>이 날 마감인 태스크가 없습니다.</div>

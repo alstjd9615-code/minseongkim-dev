@@ -25,15 +25,7 @@ export function HomeDashboard({ onNavigate }: Props) {
 
   useEffect(() => {
     void goals.loadEntries();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  useEffect(() => {
     void habits.loadEntries();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  useEffect(() => {
     void tasks.loadEntries();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

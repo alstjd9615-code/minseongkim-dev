@@ -24,7 +24,7 @@ export async function generateBriefing(payload: BriefingRequest): Promise<Briefi
   });
 
   if (!response.ok) {
-    const error = await response.json().catch(() => ({ message: 'Unknown error' }));
+    const error = await response.json().catch(() => ({ message: `HTTP ${response.status}` }));
     throw new Error((error as { message?: string }).message ?? `HTTP ${response.status}`);
   }
 
