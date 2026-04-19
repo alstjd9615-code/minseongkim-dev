@@ -17,9 +17,10 @@ import { MandalartView } from './components/Mandalart/MandalartView';
 import { HabitsTracker } from './components/Habits/HabitsTracker';
 import { TaskMatrix } from './components/Tasks/TaskMatrix';
 import { JournalView } from './components/Journal/JournalView';
+import { CalendarView } from './components/Calendar/CalendarView';
 import './App.css';
 
-type Section = 'home' | 'career' | 'knowledge' | 'workout' | 'goals' | 'assistant' | 'diary' | 'dashboard' | 'lifewheel' | 'mandalart' | 'habits' | 'tasks' | 'journal';
+type Section = 'home' | 'career' | 'knowledge' | 'workout' | 'goals' | 'assistant' | 'diary' | 'dashboard' | 'lifewheel' | 'mandalart' | 'habits' | 'tasks' | 'journal' | 'calendar';
 type CareerPage = 'portfolio' | 'blog';
 
 const SECTION_LABELS: Record<Section, string> = {
@@ -36,6 +37,7 @@ const SECTION_LABELS: Record<Section, string> = {
   habits: '🌱 습관 트래커',
   tasks: '⚡ 우선순위',
   journal: '📖 저널',
+  calendar: '📅 캘린더',
 };
 
 const ASSISTANT_CONTEXT: Record<Section, string> = {
@@ -52,6 +54,7 @@ const ASSISTANT_CONTEXT: Record<Section, string> = {
   habits: '사용자가 습관 트래커 페이지를 보고 있습니다.',
   tasks: '사용자가 아이젠하워 매트릭스 우선순위 페이지를 보고 있습니다.',
   journal: '사용자가 저널 페이지를 보고 있습니다.',
+  calendar: '사용자가 캘린더 페이지에서 태스크 일정을 보고 있습니다.',
 };
 
 const ASSISTANT_EMPTY_TEXT: Record<Section, string> = {
@@ -68,6 +71,7 @@ const ASSISTANT_EMPTY_TEXT: Record<Section, string> = {
   habits: '습관 패턴을 분석해드릴까요?\n습관에 대해 무엇이든 물어보세요.',
   tasks: '할 일 우선순위 정리를 도와드릴까요?\n오늘 할 일을 말씀해주세요.',
   journal: '회고 내용을 정리해드릴까요?\n이번 주/달을 돌아보세요.',
+  calendar: '일정 계획을 도와드릴까요?\n마감일 기반으로 우선순위를 잡아드립니다.',
 };
 
 // 상단 탭바에 표시할 주요 탭
@@ -78,6 +82,7 @@ const TOP_TABS: { id: Section; label: string; icon: string }[] = [
   { id: 'workout',   label: '운동',         icon: '💪' },
   { id: 'diary',     label: '일상기록',     icon: '📓' },
   { id: 'knowledge', label: '지식관리',     icon: '🧠' },
+  { id: 'calendar',  label: '캘린더',       icon: '📅' },
   { id: 'assistant', label: 'AI 어시스턴트', icon: '🤖' },
 ];
 
@@ -314,6 +319,13 @@ function AppContent() {
           {activeSection === 'journal' && (
             <div className="fullPane">
               <JournalView />
+            </div>
+          )}
+
+          {/* 📅 캘린더 */}
+          {activeSection === 'calendar' && (
+            <div className="fullPane">
+              <CalendarView />
             </div>
           )}
         </div>

@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useGoals } from '../../hooks/useGoals';
 import { useHabits } from '../../hooks/useHabits';
+import { useTasks } from '../../hooks/useTasks';
+import { AiBriefing } from '../AI/AiBriefing';
 import styles from './Home.module.css';
 
 interface Props {
@@ -18,6 +20,7 @@ function getGreeting(): string {
 export function HomeDashboard({ onNavigate }: Props) {
   const goals = useGoals();
   const habits = useHabits();
+  const tasks = useTasks();
   const [todayStr] = useState(() => new Date().toISOString().slice(0, 10));
 
   useEffect(() => {
@@ -27,6 +30,11 @@ export function HomeDashboard({ onNavigate }: Props) {
 
   useEffect(() => {
     void habits.loadEntries();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    void tasks.loadEntries();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -58,6 +66,12 @@ export function HomeDashboard({ onNavigate }: Props) {
         <h1 className={styles.heroGreeting}>{getGreeting()}</h1>
         <p className={styles.heroDate}>{today}</p>
       </div>
+
+      <AiBriefing
+        tasks={tasks.entries}
+        habits={habits.entries}
+        goals={goals.entries}
+      />
 
       <div className={styles.grid}>
         <div className={`${styles.card} ${styles.cardClickable}`} onClick={() => onNavigate('goals')}>
