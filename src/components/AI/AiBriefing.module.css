@@ -114,6 +114,26 @@
   font-style: italic;
 }
 
+.actionLink {
+  display: inline;
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  border-radius: 4px;
+  padding: 1px 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #10B981;
+  cursor: pointer;
+  transition: all 0.15s;
+  margin: 0 2px;
+  line-height: inherit;
+}
+
+.actionLink:hover {
+  background: rgba(16, 185, 129, 0.2);
+  border-color: rgba(16, 185, 129, 0.5);
+}
+
 .generateBtn {
   margin-top: 10px;
   background: linear-gradient(90deg, #1E3A5F 0%, #10B981 100%);

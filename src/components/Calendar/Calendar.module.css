@@ -37,6 +37,7 @@
   align-items: center;
   justify-content: space-between;
   margin-bottom: 16px;
+  gap: 8px;
 }
 
 .monthTitle {
@@ -231,6 +232,69 @@
   opacity: 0.5;
   text-align: center;
   padding: 24px 0;
+}
+
+.emptyDateWrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 0;
+}
+
+.addTaskCta {
+  background: linear-gradient(90deg, #1E3A5F 0%, #10B981 100%);
+  border: none;
+  border-radius: 8px;
+  padding: 8px 18px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #fff;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+
+.addTaskCta:hover {
+  opacity: 0.85;
+}
+
+.todayBtn {
+  font-size: 12px;
+  font-weight: 600;
+  color: #10B981;
+  background: rgba(16, 185, 129, 0.08);
+  border: 1px solid rgba(16, 185, 129, 0.35);
+  border-radius: 6px;
+  padding: 4px 10px;
+  cursor: pointer;
+  transition: all 0.15s;
+  margin-left: auto;
+  white-space: nowrap;
+}
+
+.todayBtn:hover {
+  background: rgba(16, 185, 129, 0.15);
+}
+
+.checkBtn {
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 11px;
+  color: #10B981;
+  flex-shrink: 0;
+  transition: all 0.15s;
+}
+
+.checkBtn:hover {
+  background: rgba(16, 185, 129, 0.1);
+  border-color: #10B981;
 }
 
 @media (max-width: 600px) {

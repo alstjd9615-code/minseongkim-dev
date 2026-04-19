@@ -3,6 +3,7 @@ import { useChat } from './hooks/useChat';
 import { useAssistant } from './hooks/useAssistant';
 import { useAuth } from './contexts/useAuth';
 import { AuthGuard } from './components/Auth/AuthGuard';
+import { TasksProvider } from './contexts/TasksContext';
 import { ChatInterface } from './components/Chat/ChatInterface';
 import { PortfolioView } from './components/Portfolio/PortfolioView';
 import { DiaryList } from './components/Diary/DiaryList';
@@ -325,7 +326,7 @@ function AppContent() {
           {/* 📅 캘린더 */}
           {activeSection === 'calendar' && (
             <div className="fullPane">
-              <CalendarView />
+              <CalendarView onNavigate={section => setActiveSection(section as Section)} />
             </div>
           )}
         </div>
@@ -351,7 +352,9 @@ function AppContent() {
 function App() {
   return (
     <AuthGuard>
-      <AppContent />
+      <TasksProvider>
+        <AppContent />
+      </TasksProvider>
     </AuthGuard>
   );
 }

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useTasks } from '../../hooks/useTasks';
+import { useTasksContext } from '../../contexts/useTasksContext';
 import type { CreateTaskRequest, TaskEntry, TaskQuadrant } from '../../types';
 import { TASK_QUADRANTS } from '../../types';
 import styles from './Tasks.module.css';
@@ -75,7 +75,7 @@ function QuadrantPanel({ quadrant, tasks, onComplete, onDelete }: QuadrantPanelP
 }
 
 export function TaskMatrix() {
-  const { entries, isSubmitting, isLoading, error, submit, loadEntries, update, remove } = useTasks();
+  const { entries, isSubmitting, isLoading, error, submit, loadEntries, update, remove } = useTasksContext();
   const [title, setTitle] = useState('');
   const [urgent, setUrgent] = useState(false);
   const [important, setImportant] = useState(true);

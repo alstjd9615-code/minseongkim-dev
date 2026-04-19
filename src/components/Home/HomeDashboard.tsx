@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useGoals } from '../../hooks/useGoals';
 import { useHabits } from '../../hooks/useHabits';
-import { useTasks } from '../../hooks/useTasks';
+import { useTasksContext } from '../../contexts/useTasksContext';
+import { getLocalDateStr } from '../../utils/date';
 import { AiBriefing } from '../AI/AiBriefing';
 import styles from './Home.module.css';
 
@@ -20,8 +21,8 @@ function getGreeting(): string {
 export function HomeDashboard({ onNavigate }: Props) {
   const goals = useGoals();
   const habits = useHabits();
-  const tasks = useTasks();
-  const [todayStr] = useState(() => new Date().toISOString().slice(0, 10));
+  const tasks = useTasksContext();
+  const [todayStr] = useState(() => getLocalDateStr());
 
   useEffect(() => {
     void goals.loadEntries();
@@ -41,12 +42,16 @@ export function HomeDashboard({ onNavigate }: Props) {
   const maxStreak = habits.entries.reduce((max, h) => {
     let streak = 0;
     const d = new Date();
-    while (Array.isArray(h.checkDates) && h.checkDates.includes(d.toISOString().slice(0, 10))) {
+    while (Array.isArray(h.checkDates) && h.checkDates.includes(getLocalDateStr(d))) {
       streak++;
       d.setDate(d.getDate() - 1);
     }
     return Math.max(max, streak);
   }, 0);
+
+  // Q1 태스크 (긴급+중요, 미완료)
+  const q1Tasks = tasks.entries.filter(t => t.urgent && t.important && !t.completed);
+  const q1Total = q1Tasks.length;
 
   const today = new Date().toLocaleDateString('ko-KR', {
     year: 'numeric', month: 'long', day: 'numeric', weekday: 'long',
@@ -63,7 +68,32 @@ export function HomeDashboard({ onNavigate }: Props) {
         tasks={tasks.entries}
         habits={habits.entries}
         goals={goals.entries}
+        onNavigate={onNavigate}
       />
+
+      {/* Q1 태스크 인라인 목록 */}
+      {q1Total > 0 && (
+        <div className={styles.q1Section}>
+          <div className={styles.q1Header}>
+            <span className={styles.q1Title}>🔴 오늘 즉시 실행 태스크</span>
+            <button className={styles.q1More} onClick={() => onNavigate('tasks')}>
+              전체 보기 →
+            </button>
+          </div>
+          <div className={styles.q1List}>
+            {q1Tasks.slice(0, 3).map(t => (
+              <div key={t.taskId} className={styles.q1Item}>
+                <span className={styles.q1Dot} />
+                <span className={styles.q1ItemTitle}>{t.title}</span>
+                {t.dueDate && <span className={styles.q1Due}>📅 {t.dueDate}</span>}
+              </div>
+            ))}
+            {q1Total > 3 && (
+              <div className={styles.q1More2}>+{q1Total - 3}개 더</div>
+            )}
+          </div>
+        </div>
+      )}
 
       <div className={styles.grid}>
         <div className={`${styles.card} ${styles.cardClickable}`} onClick={() => onNavigate('goals')}>
@@ -82,6 +112,20 @@ export function HomeDashboard({ onNavigate }: Props) {
             <div className={styles.cardTitle}>오늘 습관</div>
             <div className={styles.cardValue}>{checkedToday}<span className={styles.cardUnit}>/{totalHabits}개</span></div>
             <div className={styles.cardSub}>최대 연속 {maxStreak}일 🔥</div>
+          </div>
+          <div className={styles.cardArrow}>›</div>
+        </div>
+
+        <div className={`${styles.card} ${styles.cardClickable}`} onClick={() => onNavigate('tasks')}>
+          <div className={styles.cardIcon}>⚡</div>
+          <div className={styles.cardContent}>
+            <div className={styles.cardTitle}>우선순위 매트릭스</div>
+            <div className={styles.cardValue} style={{ color: q1Total > 0 ? '#EF4444' : undefined }}>
+              {q1Total}<span className={styles.cardUnit}>개 즉시 실행</span>
+            </div>
+            <div className={styles.cardSub}>
+              {tasks.entries.filter(t => !t.completed).length}개 미완료 / {tasks.entries.filter(t => t.completed).length}개 완료
+            </div>
           </div>
           <div className={styles.cardArrow}>›</div>
         </div>
@@ -106,22 +150,12 @@ export function HomeDashboard({ onNavigate }: Props) {
           <div className={styles.cardArrow}>›</div>
         </div>
 
-        <div className={`${styles.card} ${styles.cardClickable}`} onClick={() => onNavigate('tasks')}>
-          <div className={styles.cardIcon}>⚡</div>
+        <div className={`${styles.card} ${styles.cardClickable}`} onClick={() => onNavigate('calendar')}>
+          <div className={styles.cardIcon}>📅</div>
           <div className={styles.cardContent}>
-            <div className={styles.cardTitle}>우선순위 매트릭스</div>
-            <div className={styles.cardValue}>4<span className={styles.cardUnit}>분면</span></div>
-            <div className={styles.cardSub}>Eisenhower 분류하기</div>
-          </div>
-          <div className={styles.cardArrow}>›</div>
-        </div>
-
-        <div className={`${styles.card} ${styles.cardClickable}`} onClick={() => onNavigate('projects')}>
-          <div className={styles.cardIcon}>🗂️</div>
-          <div className={styles.cardContent}>
-            <div className={styles.cardTitle}>프로젝트</div>
-            <div className={styles.cardValue}>마일스톤<span className={styles.cardUnit}> 관리</span></div>
-            <div className={styles.cardSub}>태스크 & 진행률 추적</div>
+            <div className={styles.cardTitle}>캘린더</div>
+            <div className={styles.cardValue}>일정<span className={styles.cardUnit}> 보기</span></div>
+            <div className={styles.cardSub}>마감일 기반 월간 뷰</div>
           </div>
           <div className={styles.cardArrow}>›</div>
         </div>

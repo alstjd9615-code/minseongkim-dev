@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { useTasks } from '../../hooks/useTasks';
+import { useTasksContext } from '../../contexts/useTasksContext';
+import { getLocalDateStr } from '../../utils/date';
 import type { TaskEntry, TaskQuadrant } from '../../types';
 import styles from './Calendar.module.css';
 
@@ -35,14 +36,18 @@ function toLocalDateLabel(dateStr: string): string {
   });
 }
 
-export function CalendarView() {
-  const { entries, isLoading, loadEntries } = useTasks();
+interface Props {
+  onNavigate?: (section: string) => void;
+}
+
+export function CalendarView({ onNavigate }: Props) {
+  const { entries, isLoading, loadEntries, update } = useTasksContext();
+  const todayStr = getLocalDateStr();
   const [viewDate, setViewDate] = useState(() => new Date());
-  const [selectedDate, setSelectedDate] = useState<string>(() => new Date().toISOString().slice(0, 10));
+  const [selectedDate, setSelectedDate] = useState<string>(todayStr);
 
   const year = viewDate.getFullYear();
   const month = viewDate.getMonth();
-  const todayStr = new Date().toISOString().slice(0, 10);
 
   useEffect(() => {
     void loadEntries();
@@ -59,8 +64,20 @@ export function CalendarView() {
 
   const prevMonth = () => setViewDate(d => new Date(d.getFullYear(), d.getMonth() - 1, 1));
   const nextMonth = () => setViewDate(d => new Date(d.getFullYear(), d.getMonth() + 1, 1));
+  const goToday = () => {
+    setViewDate(new Date());
+    setSelectedDate(todayStr);
+  };
+
+  const isCurrentMonth =
+    viewDate.getFullYear() === new Date().getFullYear() &&
+    viewDate.getMonth() === new Date().getMonth();
 
   const selectedTasks = tasksByDate[selectedDate] ?? [];
+
+  const handleToggleComplete = (taskId: string, completed: boolean) => {
+    void update(taskId, { completed });
+  };
 
   return (
     <div className={styles.calendarPanel}>
@@ -76,6 +93,11 @@ export function CalendarView() {
             {year}년 {month + 1}월
           </div>
           <button className={styles.navBtn} onClick={nextMonth}>›</button>
+          {!isCurrentMonth && (
+            <button className={styles.todayBtn} onClick={goToday}>
+              오늘로 이동
+            </button>
+          )}
         </div>
 
         <div className={styles.weekdayRow}>
@@ -136,7 +158,17 @@ export function CalendarView() {
           📋 {toLocalDateLabel(selectedDate)} 태스크
         </div>
         {selectedTasks.length === 0 ? (
-          <div className={styles.emptyMessage}>이 날 마감인 태스크가 없습니다.</div>
+          <div className={styles.emptyDateWrap}>
+            <div className={styles.emptyMessage}>이 날 마감인 태스크가 없습니다.</div>
+            {onNavigate && (
+              <button
+                className={styles.addTaskCta}
+                onClick={() => onNavigate('tasks')}
+              >
+                ⚡ 이 날 태스크 추가하기
+              </button>
+            )}
+          </div>
         ) : (
           selectedTasks.map(task => {
             const q = getQuadrant(task.urgent, task.important);
@@ -145,9 +177,15 @@ export function CalendarView() {
                 key={task.taskId}
                 className={`${styles.taskListItem} ${task.completed ? styles.completed : ''}`}
               >
+                <button
+                  className={styles.checkBtn}
+                  onClick={() => handleToggleComplete(task.taskId, !task.completed)}
+                  title={task.completed ? '완료 취소' : '완료 처리'}
+                >
+                  {task.completed ? '✓' : '○'}
+                </button>
                 <span className={`${styles.taskBadge} ${styles[`badge${q}`]}`}>{q}</span>
                 <span style={{ flex: 1 }}>{task.title}</span>
-                {task.completed && <span style={{ fontSize: 14 }}>✅</span>}
               </div>
             );
           })
