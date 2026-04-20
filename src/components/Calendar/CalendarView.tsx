@@ -186,6 +186,16 @@ export function CalendarView({ onNavigate }: Props) {
                 </button>
                 <span className={`${styles.taskBadge} ${styles[`badge${q}`]}`}>{q}</span>
                 <span style={{ flex: 1 }}>{task.title}</span>
+                {task.timeBlockStart && (
+                  <span className={styles.calTimeBlock}>
+                    🕐 {task.timeBlockStart}{task.timeBlockEnd ? `–${task.timeBlockEnd}` : ''}
+                  </span>
+                )}
+                {task.microStep && (
+                  <span className={styles.calMicroStep} title={`첫 행동: ${task.microStep}`}>
+                    ⚡
+                  </span>
+                )}
               </div>
             );
           })

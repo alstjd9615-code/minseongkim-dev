@@ -179,3 +179,45 @@
 
 /* Make task card position relative for the dropdown */
 .taskCard { position: relative; }
+
+/* Deadline urgency badges */
+.dueOverdue { color: var(--danger) !important; font-weight: 600; }
+.dueToday   { color: #F59E0B !important; font-weight: 600; }
+.dueSoon    { color: var(--warning) !important; }
+
+/* Micro step under task title */
+.microStepRow {
+  font-size: 11px;
+  color: var(--accent);
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Time block badge */
+.timeBlockBadge {
+  display: inline-flex;
+  align-items: center;
+  font-size: 10px;
+  color: #3B82F6;
+  background: rgba(59, 130, 246, 0.08);
+  border: 1px solid rgba(59, 130, 246, 0.2);
+  border-radius: 8px;
+  padding: 1px 6px;
+}
+
+/* Pin button */
+.pinBtn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 2px 5px;
+  border-radius: 4px;
+  font-size: 12px;
+  color: var(--text);
+  opacity: 0.25;
+  transition: all 0.15s;
+}
+.pinBtn:hover { opacity: 0.75; background: rgba(245, 158, 11, 0.1); }
+.pinBtnActive { opacity: 0.9 !important; }

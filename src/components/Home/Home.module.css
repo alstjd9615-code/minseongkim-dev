@@ -190,3 +190,28 @@
   opacity: 0.3;
   flex-shrink: 0;
 }
+
+/* ── Weekly Report Toggle ──────────────────────────────── */
+.weeklyReportToggle {
+  margin-bottom: 16px;
+}
+
+.weeklyToggleBtn {
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 7px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  cursor: pointer;
+  transition: all 0.15s;
+  width: 100%;
+  text-align: left;
+}
+
+.weeklyToggleBtn:hover {
+  border-color: var(--accent-border);
+  color: var(--text-h);
+  background: var(--accent-bg);
+}

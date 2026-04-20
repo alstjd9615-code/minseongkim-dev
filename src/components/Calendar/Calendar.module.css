@@ -302,3 +302,22 @@
   .dayCell { min-height: 32px; }
   .dayNumber { font-size: 11px; }
 }
+
+/* Time block and micro step in calendar task list */
+.calTimeBlock {
+  font-size: 11px;
+  color: #3B82F6;
+  background: rgba(59, 130, 246, 0.08);
+  border: 1px solid rgba(59, 130, 246, 0.2);
+  border-radius: 6px;
+  padding: 1px 6px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.calMicroStep {
+  font-size: 13px;
+  opacity: 0.6;
+  flex-shrink: 0;
+  cursor: default;
+}

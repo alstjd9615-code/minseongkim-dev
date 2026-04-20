@@ -34,6 +34,8 @@ export function AiBriefing({ tasks, habits, goals, onNavigate }: Props) {
           important: t.important,
           completed: t.completed,
           dueDate: t.dueDate,
+          isPinned: t.isPinned,
+          microStep: t.microStep,
         })),
         habits: habits.map(h => ({
           name: h.name,

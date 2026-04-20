@@ -200,3 +200,87 @@ src/components/Goals/Goals.module.css    ← 관련 습관 스타일 (신규)
 | AI 어시스턴트 | 섹션 컨텍스트 포함 자유 대화 가능 |
 | 인증 | Cognito 로그인/로그아웃 |
 | 반응형 | 모바일 하단 탭바 정상 작동 |
+
+---
+
+## ✅ Epic: 7가지 실행 원칙 (Execution Principles Epic)
+
+> 7가지 행동 과학 원칙을 AI Life Manager에 실제 기능, UX, 데이터 구조로 반영
+
+### [Issue 1] Foundation — Task 타입 확장 (백엔드 + 프론트엔드)
+- [x] `TaskEntry` / `CreateTaskRequest` / `UpdateTaskRequest`에 신규 필드 추가
+  - `isPinned?: boolean` — Today Top 3 핀 고정
+  - `microStep?: string` — 첫 번째 2분 행동 (Tiny Start)
+  - `timeBlockStart?: string` / `timeBlockEnd?: string` — 타임블록 (HH:MM)
+- [x] 백엔드 `tasks/handler.py` POST/PUT에서 신규 필드 처리
+
+### [Issue 2] Today Top 3 (선택 축소 규칙)
+- [x] `TodayTop3.tsx` 신규 컴포넌트
+  - 📌 핀된 태스크 우선, 나머지는 Q1/마감 기준 자동 선택
+  - 핀 토글 버튼 / 완료 버튼 / 🎯 집중 모드 진입 버튼
+  - deadline 배지 (overdue/today/soon) 포함
+  - microStep 표시, timeBlock 표시
+- [x] HomeDashboard에 통합 (Q1 인라인 섹션 대체)
+- [x] `TodayTop3.module.css` 신규
+
+### [Issue 3] Tiny Start / Micro Step (2분 법칙 + 행동 시작 최소화)
+- [x] QuickAddModal에 "고급 옵션" 토글 추가
+  - ⚡ 첫 번째 2분 행동 입력 (microStep)
+  - 🕐 타임블록 시작/종료 시간 입력
+- [x] TaskCard에 microStep 표시 (초록 배지)
+- [x] `QuickAdd.module.css` 업데이트
+
+### [Issue 4] Deadline Urgency Badges (데드라인 규칙)
+- [x] `getDeadlineStatus()` 함수: `overdue / today / soon / null`
+- [x] TaskMatrix TaskCard에 deadline 상태별 색상 배지
+  - ⛔ 기한 초과 (빨강), 🔥 오늘 마감 (주황), ⏰ 마감 임박 3일 내 (노랑)
+- [x] `Tasks.module.css`에 `.dueOverdue`, `.dueToday`, `.dueSoon` 추가
+
+### [Issue 5] Time Blocking in Calendar (시간 나누기 규칙)
+- [x] CalendarView 날짜별 태스크 목록에 타임블록 배지 표시
+  - 🕐 HH:MM~HH:MM 형식
+  - ⚡ microStep 아이콘 툴팁
+- [x] `Calendar.module.css`에 `.calTimeBlock`, `.calMicroStep` 추가
+
+### [Issue 6] Focus Mode (단일 과제 집중 규칙)
+- [x] `FocusMode.tsx` 신규 컴포넌트 (포모도로 타이머)
+  - 25분 집중 / 5분 휴식 자동 전환
+  - 세트 카운터 🍅
+  - 진행 링 애니메이션
+  - microStep 표시
+  - ✓ 완료 버튼 (TasksContext.update 직접 호출)
+- [x] `FocusMode.module.css` 신규
+- [x] App.tsx에 `focus` 섹션 추가
+- [x] TodayTop3의 🎯 버튼으로 집중 모드 진입
+
+### [Issue 7] Sleep/Recovery Signal (수면 회복 최적화)
+- [x] `SleepSignal.tsx` 신규 컴포넌트
+  - localStorage 기반 오늘 수면 기록 (hours + quality)
+  - 상태별 컨디션 메시지 (good/fair/poor)
+  - 수면 <6시간 또는 poor → 집중 블록 단축 권고
+- [x] `SleepSignal.module.css` 신규
+- [x] HomeDashboard에 통합 (QuickAdd 바로 아래)
+
+### [Issue 8] Weekly Report on HomeDashboard
+- [x] HomeDashboard에 WeeklyReport 토글 버튼 추가
+- [x] "AI 주간 리포트 보기" 클릭 시 확장/접기
+- [x] Home.module.css에 `.weeklyReportToggle`, `.weeklyToggleBtn` 추가
+
+### [Issue 9] AI Briefing Prompt Enhancement (행동 원칙 통합)
+- [x] `BriefingRequest` 타입에 `isPinned`, `microStep` 필드 추가
+- [x] `buildBriefingPrompt()` 업데이트
+  - Today Top 3 (isPinned) 기반 선택 축소 힌트
+  - microStep 포함 2분 시작 행동 제안
+  - 마감 임박(3일 내) 경고 추가
+  - 4가지 형식으로 구조화 (우선순위 → 첫 행동 → 습관 → 목표)
+- [x] AiBriefing.tsx에서 isPinned, microStep 전달
+
+### [Issue 10] 문서화 및 QA
+- [x] `docs/TODO_CHECKLIST.md` 업데이트 (이 섹션)
+- [x] TypeScript 빌드 오류 없음 (`tsc --noEmit` ✅)
+- [x] ESLint 통과 (pre-existing HabitsTracker.tsx 이슈 제외)
+
+### KNOWN_GAPS (이번 에픽)
+- Monthly Report는 이번 에픽에서 제외 (별도 에픽으로 분리)
+- 백엔드 microStep/timeBlock/isPinned 필드는 DynamoDB에 저장되나 기존 데이터에는 없음
+- Sprint/Deadline 타이머 앱 수준의 별도 기능은 이번 에픽에서 제외

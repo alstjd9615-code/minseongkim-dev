@@ -5,11 +5,16 @@ import { useProjects } from '../../hooks/useProjects';
 import { useTasksContext } from '../../contexts/useTasksContext';
 import { getLocalDateStr } from '../../utils/date';
 import { AiBriefing } from '../AI/AiBriefing';
+import { WeeklyReport } from '../AI/WeeklyReport';
 import { QuickAdd } from './QuickAdd';
+import { TodayTop3 } from './TodayTop3';
+import { SleepSignal } from './SleepSignal';
+import type { TaskEntry } from '../../types';
 import styles from './Home.module.css';
 
 interface Props {
   onNavigate: (section: string) => void;
+  onFocusTask?: (task: TaskEntry) => void;
 }
 
 function getGreeting(): string {
@@ -20,12 +25,13 @@ function getGreeting(): string {
   return '좋은 저녁이에요 🌆';
 }
 
-export function HomeDashboard({ onNavigate }: Props) {
+export function HomeDashboard({ onNavigate, onFocusTask }: Props) {
   const goals = useGoals();
   const habits = useHabits();
   const tasks = useTasksContext();
   const projects = useProjects();
   const [todayStr] = useState(() => getLocalDateStr());
+  const [showWeeklyReport, setShowWeeklyReport] = useState(false);
 
   useEffect(() => {
     void goals.loadEntries();
@@ -70,6 +76,18 @@ export function HomeDashboard({ onNavigate }: Props) {
 
       <QuickAdd />
 
+      {/* Sleep / Recovery Signal */}
+      <SleepSignal />
+
+      {/* Today Top 3 (선택 축소 규칙) */}
+      <TodayTop3
+        tasks={tasks.entries}
+        onPin={(taskId, isPinned) => void tasks.update(taskId, { isPinned })}
+        onComplete={(taskId, completed) => void tasks.update(taskId, { completed })}
+        onNavigate={onNavigate}
+        onFocus={onFocusTask}
+      />
+
       <AiBriefing
         tasks={tasks.entries}
         habits={habits.entries}
@@ -77,28 +95,22 @@ export function HomeDashboard({ onNavigate }: Props) {
         onNavigate={onNavigate}
       />
 
-      {/* Q1 태스크 인라인 목록 */}
-      {q1Total > 0 && (
-        <div className={styles.q1Section}>
-          <div className={styles.q1Header}>
-            <span className={styles.q1Title}>🔴 오늘 즉시 실행 태스크</span>
-            <button className={styles.q1More} onClick={() => onNavigate('tasks')}>
-              전체 보기 →
-            </button>
-          </div>
-          <div className={styles.q1List}>
-            {q1Tasks.slice(0, 3).map(t => (
-              <div key={t.taskId} className={styles.q1Item}>
-                <span className={styles.q1Dot} />
-                <span className={styles.q1ItemTitle}>{t.title}</span>
-                {t.dueDate && <span className={styles.q1Due}>📅 {t.dueDate}</span>}
-              </div>
-            ))}
-            {q1Total > 3 && (
-              <div className={styles.q1More2}>+{q1Total - 3}개 더</div>
-            )}
-          </div>
-        </div>
+      {/* Weekly Report toggle */}
+      <div className={styles.weeklyReportToggle}>
+        <button
+          className={styles.weeklyToggleBtn}
+          onClick={() => setShowWeeklyReport(v => !v)}
+        >
+          📊 {showWeeklyReport ? '▾ 주간 리포트 접기' : '▸ AI 주간 리포트 보기'}
+        </button>
+      </div>
+      {showWeeklyReport && (
+        <WeeklyReport
+          tasks={tasks.entries}
+          habits={habits.entries}
+          goals={goals.entries}
+          projects={projects.entries}
+        />
       )}
 
       <div className={styles.grid}>
