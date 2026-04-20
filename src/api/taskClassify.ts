@@ -28,6 +28,7 @@ export async function classifyTask(title: string): Promise<ClassifyResult> {
       const parsed = JSON.parse(match[0]) as { urgent?: unknown; important?: unknown };
       return {
         urgent: parsed.urgent === true,
+        // Default to important=true when the field is missing: new tasks are assumed worth doing
         important: parsed.important !== false,
       };
     }

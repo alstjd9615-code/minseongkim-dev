@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useGoals } from '../../hooks/useGoals';
 import { useHabits } from '../../hooks/useHabits';
 import type { CreateGoalRequest, GoalEntry, GoalPeriod, GoalStatus, HabitEntry, UpdateGoalRequest } from '../../types';
@@ -178,11 +178,14 @@ function GoalCard({
 }) {
   const [progress, setProgress] = useState(Number(entry.progress) || 0);
 
+  // Minimum word length to avoid noise from particles like "의", "을", "를"
+  const MIN_KEYWORD_LENGTH = 2;
+
   // Keyword-based habit matching: find habits whose name shares a word with the goal title
-  const relatedHabits = habits.filter(h => {
-    const goalWords = entry.title.toLowerCase().split(/\s+/).filter(w => w.length > 1);
-    return goalWords.some(w => h.name.toLowerCase().includes(w));
-  });
+  const relatedHabits = useMemo(() => {
+    const goalWords = entry.title.toLowerCase().split(/\s+/).filter(w => w.length >= MIN_KEYWORD_LENGTH);
+    return habits.filter(h => goalWords.some(w => h.name.toLowerCase().includes(w)));
+  }, [entry.title, habits]);
 
   const periodClass = entry.period === '단기' ? styles.badgeShort : styles.badgeLong;
   const statusClass =
