@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useChat } from './hooks/useChat';
 import { useAssistant } from './hooks/useAssistant';
 import { useAuth } from './contexts/useAuth';
@@ -19,9 +19,12 @@ import { HabitsTracker } from './components/Habits/HabitsTracker';
 import { TaskMatrix } from './components/Tasks/TaskMatrix';
 import { JournalView } from './components/Journal/JournalView';
 import { CalendarView } from './components/Calendar/CalendarView';
+import { ProjectsView } from './components/Projects/ProjectsView';
+import { QuickAddModal } from './components/QuickAdd/QuickAddModal';
+import { QuickAddFab } from './components/QuickAdd/QuickAddFab';
 import './App.css';
 
-type Section = 'home' | 'career' | 'knowledge' | 'workout' | 'goals' | 'assistant' | 'diary' | 'dashboard' | 'lifewheel' | 'mandalart' | 'habits' | 'tasks' | 'journal' | 'calendar';
+type Section = 'home' | 'career' | 'knowledge' | 'workout' | 'goals' | 'assistant' | 'diary' | 'dashboard' | 'lifewheel' | 'mandalart' | 'habits' | 'tasks' | 'journal' | 'calendar' | 'projects';
 type CareerPage = 'portfolio' | 'blog';
 
 const SECTION_LABELS: Record<Section, string> = {
@@ -39,6 +42,7 @@ const SECTION_LABELS: Record<Section, string> = {
   tasks: '⚡ 우선순위',
   journal: '📖 저널',
   calendar: '📅 캘린더',
+  projects: '🗂️ 프로젝트',
 };
 
 const ASSISTANT_CONTEXT: Record<Section, string> = {
@@ -56,6 +60,7 @@ const ASSISTANT_CONTEXT: Record<Section, string> = {
   tasks: '사용자가 아이젠하워 매트릭스 우선순위 페이지를 보고 있습니다.',
   journal: '사용자가 저널 페이지를 보고 있습니다.',
   calendar: '사용자가 캘린더 페이지에서 태스크 일정을 보고 있습니다.',
+  projects: '사용자가 프로젝트 관리 페이지를 보고 있습니다.',
 };
 
 const ASSISTANT_EMPTY_TEXT: Record<Section, string> = {
@@ -73,6 +78,7 @@ const ASSISTANT_EMPTY_TEXT: Record<Section, string> = {
   tasks: '할 일 우선순위 정리를 도와드릴까요?\n오늘 할 일을 말씀해주세요.',
   journal: '회고 내용을 정리해드릴까요?\n이번 주/달을 돌아보세요.',
   calendar: '일정 계획을 도와드릴까요?\n마감일 기반으로 우선순위를 잡아드립니다.',
+  projects: '프로젝트 진행 상황을 분석해드릴까요?\n마일스톤과 태스크를 정리해드립니다.',
 };
 
 // 상단 탭바에 표시할 주요 탭
@@ -80,6 +86,7 @@ const TOP_TABS: { id: Section; label: string; icon: string }[] = [
   { id: 'home',      label: '홈',           icon: '🏠' },
   { id: 'career',    label: '커리어',       icon: '💼' },
   { id: 'goals',     label: '목표',         icon: '🎯' },
+  { id: 'projects',  label: '프로젝트',     icon: '🗂️' },
   { id: 'workout',   label: '운동',         icon: '💪' },
   { id: 'diary',     label: '일상기록',     icon: '📓' },
   { id: 'knowledge', label: '지식관리',     icon: '🧠' },
@@ -119,9 +126,29 @@ function AppContent() {
   const { user, logout } = useAuth();
   const [activeSection, setActiveSection] = useState<Section>('home');
   const [careerPage, setCareerPage] = useState<CareerPage>('portfolio');
+  const [quickAddOpen, setQuickAddOpen] = useState(false);
 
   const email = user?.signInDetails?.loginId ?? '';
   const avatarLetter = email.charAt(0).toUpperCase();
+
+  // Global Ctrl+K / ⌘K shortcut
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        // Don't trigger if focus is in a text input/textarea (other than our modal)
+        const target = e.target as HTMLElement;
+        if (
+          target instanceof HTMLInputElement ||
+          target instanceof HTMLTextAreaElement ||
+          target instanceof HTMLSelectElement
+        ) return;
+        e.preventDefault();
+        setQuickAddOpen(true);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   const handleTabClick = (section: Section) => {
     setActiveSection(section);
@@ -329,6 +356,13 @@ function AppContent() {
               <CalendarView onNavigate={section => setActiveSection(section as Section)} />
             </div>
           )}
+
+          {/* 🗂️ 프로젝트 */}
+          {activeSection === 'projects' && (
+            <div className="fullPane">
+              <ProjectsView />
+            </div>
+          )}
         </div>
       </div>
 
@@ -345,6 +379,10 @@ function AppContent() {
           </button>
         ))}
       </nav>
+
+      {/* ── 전역 Quick Add ────────────────────────── */}
+      <QuickAddFab onClick={() => setQuickAddOpen(true)} />
+      <QuickAddModal isOpen={quickAddOpen} onClose={() => setQuickAddOpen(false)} />
     </div>
   );
 }

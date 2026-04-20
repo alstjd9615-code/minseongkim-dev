@@ -131,3 +131,51 @@
   border-radius: 4px; font-size: 12px; flex-shrink: 0; transition: all 0.15s;
 }
 .taskDelete:hover { background: var(--danger-bg); color: var(--danger); }
+
+/* Task meta row (due date + project badge) */
+.taskMeta { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-top: 2px; }
+
+/* Project badge in task card */
+.projectBadge {
+  display: inline-flex; align-items: center; gap: 2px;
+  font-size: 10px; color: var(--accent); background: var(--accent-bg);
+  border: 1px solid var(--accent-border); border-radius: 10px; padding: 1px 7px;
+  max-width: 100px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+
+/* Task actions (project link + delete) */
+.taskActions { display: flex; align-items: center; gap: 2px; flex-shrink: 0; }
+
+.projectLinkBtn {
+  background: none; border: none; cursor: pointer; padding: 2px 5px;
+  border-radius: 4px; font-size: 12px; color: var(--text); opacity: 0.45; transition: all 0.15s;
+}
+.projectLinkBtn:hover { opacity: 1; background: var(--accent-bg); }
+
+/* Project link dropdown menu */
+.projectMenu {
+  position: absolute;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+  padding: 6px;
+  z-index: 100;
+  min-width: 160px;
+  margin-top: 4px;
+}
+
+.projectMenuSelect {
+  width: 100%;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 5px 8px;
+  font-size: 12px;
+  background: var(--bg);
+  color: var(--text-h);
+  outline: none;
+  appearance: none;
+}
+
+/* Make task card position relative for the dropdown */
+.taskCard { position: relative; }

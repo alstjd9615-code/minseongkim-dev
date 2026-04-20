@@ -93,16 +93,65 @@
 
 ---
 
-## 🔲 Step 9. Not Today (나중에)
+## ✅ Step 9. 에픽: Quick Add + AI 리포트 + 프로젝트 연결 (완료)
+
+- [x] **[Issue 1] 전역 Quick Add 모달** — Ctrl+K / ⌘K 단축키, FAB 버튼
+  - `src/components/QuickAdd/QuickAddModal.tsx` (신규)
+  - `src/components/QuickAdd/QuickAddFab.tsx` (신규)
+  - `src/components/QuickAdd/QuickAdd.module.css` (신규)
+  - App.tsx에 전역 keydown 리스너 + 모달/FAB 마운트
+- [x] **[Issue 2] TaskEntry에 projectId/milestoneId 필드 추가**
+  - `src/types/index.ts` — `TaskEntry`, `CreateTaskRequest`, `UpdateTaskRequest`에 추가
+  - `backend/functions/tasks/handler.py` — POST/PUT 저장 + GET 응답 포함
+- [x] **[Issue 3] 프로젝트 마일스톤 마감일 + D-day 배지 + 진행률**
+  - 마일스톤 추가 폼에 마감일 입력 추가
+  - D-day 배지 (D+N, D-Day, D-N) 색상별 표시
+  - 마일스톤별 태스크 진행률 바
+  - 프로젝트 카드 헤더에 "마일스톤 N/M 완료" 요약
+  - 빈 상태 안내 문구 개선
+- [x] **[Issue 4] 태스크-프로젝트 연결 UI**
+  - TaskMatrix 카드에 프로젝트 배지 표시
+  - 태스크 카드에 🔗 버튼으로 프로젝트 연결 드롭다운
+  - ProjectsView에 "연결된 TaskEntry 목록" 섹션
+- [x] **[Issue 5] AI 주간 리포트 데이터 집계 레이어**
+  - `src/api/weeklyReport.ts` (신규) — buildWeeklyReportData, buildWeeklyPrompt, generateWeeklyReport
+- [x] **[Issue 6] AI 주간 리포트 UI**
+  - `src/components/AI/WeeklyReport.tsx` (신규)
+  - JournalView 주간 탭 상단에 임베드
+  - sessionStorage 캐싱, loading skeleton, error/empty 상태
+- [x] **[Issue 7] AI 월간 리포트 기본 구조**
+  - `src/api/monthlyReport.ts` (신규) — buildMonthlyReportData, buildMonthlyPrompt, generateMonthlyReport
+  - `src/components/AI/MonthlyReport.tsx` (신규) — 이전/다음 월 이동, 집계 수치 카드
+  - JournalView 월간 탭 상단에 임베드
+- [x] **[Issue 8] ProjectsView를 App.tsx 탭에 통합**
+  - 상단 탭바에 🗂️ 프로젝트 탭 추가
+  - HomeDashboard에 프로젝트 카드 추가 (진행중 수 표시)
+- [x] **[Issue 9] Quick Add 모달에 프로젝트/마일스톤 선택 연동**
+  - QuickAddModal에 프로젝트 드롭다운 + 마일스톤 드롭다운 (선택 시 표시)
+  - submit 시 projectId + milestoneId 전달
+- [x] **[Issue 10] 통합 QA + 문서 업데이트**
+  - TypeScript 빌드 (`npm run build`) 오류 없음 ✅
+  - 기존 lint 오류(HabitsTracker.tsx `Date.now`) 는 pre-existing — KNOWN_GAPS 기록
+  - DB_SCHEMA.md, TODO_CHECKLIST.md 업데이트
+
+### KNOWN_GAPS
+
+- `HabitsTracker.tsx:88` — `Date.now` 호출이 react-hooks/purity 린트 경고 발생. 이번 에픽 범위 외 pre-existing 이슈.
+- 월간 리포트의 "목표 완료" 집계는 `goal.updatedAt`을 기준으로 하므로, updatedAt이 없는 구형 데이터에서 0으로 표시될 수 있음.
+- QuickAdd 모달에서 AI 자동 분류 시 긴급/중요 토글이 모두 꺼진 경우에만 AI 분류를 수행함 (토글을 켠 경우 수동 설정 우선).
+
+---
+
+## 🔲 Step 10. Not Today (나중에)
 
 - [ ] Supabase 전환 (현재 DynamoDB 잘 작동)
 - [ ] Google Calendar 연동
-- [ ] 주간 회고 자동 생성 (Bedrock)
 - [ ] 통계 대시보드 리빌드
 - [ ] PWA/모바일 앱
 - [ ] 알림/푸시
 - [ ] 팀/공유 기능
 - [ ] 소셜 로그인 (Google, Kakao)
+- [ ] 프로젝트 삭제 시 연결 태스크의 projectId null 처리 (백엔드)
 
 ---
 

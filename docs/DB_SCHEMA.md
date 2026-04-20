@@ -20,10 +20,12 @@
   important: boolean   // 중요 여부
   completed: boolean   // 완료 여부
   dueDate?: string     // YYYY-MM-DD (선택)
+  projectId?: string   // 연결된 프로젝트 ID (선택, 느슨한 외래키)
+  milestoneId?: string // 연결된 마일스톤 ID (선택)
   createdAt: string    // ISO 8601
   updatedAt: string    // ISO 8601
   ```
-- **관계**: 없음 (단독 테이블)
+- **관계**: `projectId`로 ProjectsTable의 프로젝트와 느슨하게 연결 (삭제 시 null 처리 별도 구현 필요)
 - **오늘 필요**: ✅ 핵심
 
 ### HabitsTable

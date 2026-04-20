@@ -113,6 +113,14 @@ def handler(event: dict[str, Any], context: Any) -> dict[str, Any]:  # noqa: ARG
         if due_date:
             item["dueDate"] = due_date
 
+        project_id: str = str(body.get("projectId", "")).strip()
+        if project_id:
+            item["projectId"] = project_id
+
+        milestone_id: str = str(body.get("milestoneId", "")).strip()
+        if milestone_id:
+            item["milestoneId"] = milestone_id
+
         table = dynamodb.Table(TASKS_TABLE)
         try:
             table.put_item(Item=item)
@@ -173,6 +181,16 @@ def handler(event: dict[str, Any], context: Any) -> dict[str, Any]:  # noqa: ARG
         if "dueDate" in body:
             update_expressions.append("dueDate = :dueDate")
             expr_attr_values[":dueDate"] = str(body["dueDate"]).strip()
+
+        if "projectId" in body:
+            pid = str(body["projectId"]).strip()
+            update_expressions.append("projectId = :projectId")
+            expr_attr_values[":projectId"] = pid
+
+        if "milestoneId" in body:
+            mid = str(body["milestoneId"]).strip()
+            update_expressions.append("milestoneId = :milestoneId")
+            expr_attr_values[":milestoneId"] = mid
 
         # Recalc quadrant if urgency/importance changed
         urgent_new = body.get("urgent")

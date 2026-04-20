@@ -1,5 +1,11 @@
 import { useEffect, useState } from 'react';
 import { useJournal } from '../../hooks/useJournal';
+import { useTasksContext } from '../../contexts/useTasksContext';
+import { useHabits } from '../../hooks/useHabits';
+import { useGoals } from '../../hooks/useGoals';
+import { useProjects } from '../../hooks/useProjects';
+import { WeeklyReport } from '../AI/WeeklyReport';
+import { MonthlyReport } from '../AI/MonthlyReport';
 import type { CreateJournalRequest, JournalEntry, JournalType, KPTContent, UpdateJournalRequest } from '../../types';
 import styles from './Journal.module.css';
 
@@ -23,6 +29,10 @@ interface EditState {
 
 export function JournalView() {
   const { entries, isSubmitting, isLoading, error, submit, loadEntries, update, remove } = useJournal();
+  const tasks = useTasksContext();
+  const habits = useHabits();
+  const goals = useGoals();
+  const projects = useProjects();
   const [activeType, setActiveType] = useState<JournalType>('weekly');
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
@@ -34,6 +44,11 @@ export function JournalView() {
 
   useEffect(() => {
     void loadEntries(activeType);
+    void tasks.loadEntries();
+    void habits.loadEntries();
+    void goals.loadEntries();
+    void projects.loadEntries();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loadEntries, activeType]);
 
   const handleTabChange = (type: JournalType) => {
@@ -113,6 +128,24 @@ export function JournalView() {
           </button>
         ))}
       </div>
+
+      {/* AI 리포트 (주간/월간 탭에서만 표시) */}
+      {activeType === 'weekly' && (
+        <WeeklyReport
+          tasks={tasks.entries}
+          habits={habits.entries}
+          goals={goals.entries}
+          projects={projects.entries}
+        />
+      )}
+      {activeType === 'monthly' && (
+        <MonthlyReport
+          tasks={tasks.entries}
+          habits={habits.entries}
+          goals={goals.entries}
+          projects={projects.entries}
+        />
+      )}
 
       {/* 입력 폼 */}
       <form className={styles.form} onSubmit={handleSubmit}>

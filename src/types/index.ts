@@ -393,6 +393,8 @@ export interface TaskEntry {
   quadrant: TaskQuadrant;
   completed: boolean;
   dueDate?: string;
+  projectId?: string;
+  milestoneId?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -402,6 +404,8 @@ export interface CreateTaskRequest {
   urgent: boolean;
   important: boolean;
   dueDate?: string;
+  projectId?: string;
+  milestoneId?: string;
 }
 
 export interface UpdateTaskRequest {
@@ -410,6 +414,8 @@ export interface UpdateTaskRequest {
   important?: boolean;
   completed?: boolean;
   dueDate?: string;
+  projectId?: string;
+  milestoneId?: string;
 }
 
 export interface TaskListResponse {
