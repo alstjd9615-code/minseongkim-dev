@@ -4,6 +4,7 @@ import { useHabits } from '../../hooks/useHabits';
 import { useTasksContext } from '../../contexts/useTasksContext';
 import { getLocalDateStr } from '../../utils/date';
 import { AiBriefing } from '../AI/AiBriefing';
+import { QuickAdd } from './QuickAdd';
 import styles from './Home.module.css';
 
 interface Props {
@@ -63,6 +64,8 @@ export function HomeDashboard({ onNavigate }: Props) {
         <h1 className={styles.heroGreeting}>{getGreeting()}</h1>
         <p className={styles.heroDate}>{today}</p>
       </div>
+
+      <QuickAdd />
 
       <AiBriefing
         tasks={tasks.entries}

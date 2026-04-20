@@ -78,16 +78,18 @@
 
 ---
 
-## 🔲 Step 8. 추가 개선 (Should Have If Time Allows)
+## ✅ Step 8. 추가 개선 (완료)
 
-- [ ] **Quick Add 컴포넌트** — 홈에서 한 줄 태스크 빠른 추가
-  - 홈 상단 또는 플로팅 버튼
-  - 입력 → `createTask()` 직접 호출
-- [ ] **AI 태스크 분류** — 자연어 입력 → urgent/important 자동 판단
-  - Bedrock 호출: "이 할 일이 긴급한가요? 중요한가요?"
-- [ ] **오늘 태스크 요약 카드** — 홈에 Q1 태스크 2~3개 표시
-  - `HomeDashboard`에 Q1 태스크 인라인 표시
-- [ ] **습관 + 목표 연결** — 목표 카드에 관련 습관 표시
+- [x] **Quick Add 컴포넌트** — 홈에서 한 줄 태스크 빠른 추가
+  - 홈 상단 입력창
+  - 입력 → AI 자동 분류 → `createTask()` 직접 호출
+- [x] **AI 태스크 분류** — 자연어 입력 → urgent/important 자동 판단
+  - `/assistant` 엔드포인트 재사용: "이 할 일이 긴급한가요? 중요한가요?"
+  - JSON 파싱 + Q2 fallback
+- [x] **오늘 태스크 요약 카드** — 홈에 Q1 태스크 2~3개 표시
+  - `HomeDashboard`에 Q1 태스크 인라인 표시 (이미 완료)
+- [x] **습관 + 목표 연결** — 목표 카드에 관련 습관 표시
+  - 키워드 매칭 기반 관련 습관 chips 표시
 
 ---
 
@@ -112,17 +114,22 @@ docs/AI_LIFE_MANAGER_PRD.md       ← 재구성된 PRD (9단계)
 docs/DB_SCHEMA.md                 ← DB 스키마 참조 문서
 docs/TODO_CHECKLIST.md            ← 이 파일
 src/api/briefing.ts               ← AI 브리핑 API
+src/api/taskClassify.ts           ← AI 태스크 자동 분류 API (신규)
 src/components/AI/AiBriefing.tsx  ← AI 브리핑 컴포넌트
 src/components/AI/AiBriefing.module.css
 src/components/Calendar/CalendarView.tsx  ← 캘린더 뷰
 src/components/Calendar/Calendar.module.css
+src/components/Home/QuickAdd.tsx  ← Quick Add 컴포넌트 (신규)
+src/components/Home/QuickAdd.module.css   ← (신규)
 src/data/dummyData.ts             ← 더미 데이터 예시
 ```
 
 ### 수정된 파일
 ```
 src/App.tsx                              ← Calendar 섹션/탭 추가
-src/components/Home/HomeDashboard.tsx    ← AiBriefing 통합
+src/components/Home/HomeDashboard.tsx    ← AiBriefing + QuickAdd 통합
+src/components/Goals/GoalsList.tsx       ← 관련 습관 표시 (신규)
+src/components/Goals/Goals.module.css    ← 관련 습관 스타일 (신규)
 ```
 
 ---

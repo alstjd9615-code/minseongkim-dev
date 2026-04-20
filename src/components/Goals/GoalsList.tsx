@@ -1,11 +1,13 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useGoals } from '../../hooks/useGoals';
-import type { CreateGoalRequest, GoalEntry, GoalPeriod, GoalStatus, UpdateGoalRequest } from '../../types';
+import { useHabits } from '../../hooks/useHabits';
+import type { CreateGoalRequest, GoalEntry, GoalPeriod, GoalStatus, HabitEntry, UpdateGoalRequest } from '../../types';
 import { GOAL_PERIODS } from '../../types';
 import styles from './Goals.module.css';
 
 export function GoalsList() {
   const { entries, isSubmitting, isLoading, error, submit, loadEntries, update, remove } = useGoals();
+  const habits = useHabits();
   const [period, setPeriod] = useState<GoalPeriod>('단기');
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -15,7 +17,9 @@ export function GoalsList() {
 
   useEffect(() => {
     void loadEntries();
-  }, [loadEntries]);
+    void habits.loadEntries();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -150,6 +154,7 @@ export function GoalsList() {
             <GoalCard
               key={entry.goalId}
               entry={entry}
+              habits={habits.entries}
               onUpdate={(payload: UpdateGoalRequest) => void update(entry.goalId, payload)}
               onDelete={() => void remove(entry.goalId)}
             />
@@ -162,14 +167,25 @@ export function GoalsList() {
 
 function GoalCard({
   entry,
+  habits,
   onUpdate,
   onDelete,
 }: {
   entry: GoalEntry;
+  habits: HabitEntry[];
   onUpdate: (payload: UpdateGoalRequest) => void;
   onDelete: () => void;
 }) {
   const [progress, setProgress] = useState(Number(entry.progress) || 0);
+
+  // Minimum word length to avoid noise from particles like "의", "을", "를"
+  const MIN_KEYWORD_LENGTH = 2;
+
+  // Keyword-based habit matching: find habits whose name shares a word with the goal title
+  const relatedHabits = useMemo(() => {
+    const goalWords = entry.title.toLowerCase().split(/\s+/).filter(w => w.length >= MIN_KEYWORD_LENGTH);
+    return habits.filter(h => goalWords.some(w => h.name.toLowerCase().includes(w)));
+  }, [entry.title, habits]);
 
   const periodClass = entry.period === '단기' ? styles.badgeShort : styles.badgeLong;
   const statusClass =
@@ -212,6 +228,19 @@ function GoalCard({
           <div className={progressFillClass} style={{ width: `${progress}%` }} />
         </div>
       </div>
+
+      {relatedHabits.length > 0 && (
+        <div className={styles.relatedHabits}>
+          <span className={styles.relatedHabitsLabel}>🌱 관련 습관</span>
+          <div className={styles.relatedHabitsChips}>
+            {relatedHabits.map(h => (
+              <span key={h.habitId} className={styles.habitChip} style={{ borderColor: h.color || 'var(--accent-border)' }}>
+                {h.icon || '🌱'} {h.name}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className={styles.cardActions}>
         <div className={styles.progressInput}>
