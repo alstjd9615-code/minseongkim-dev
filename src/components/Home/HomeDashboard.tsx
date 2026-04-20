@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useGoals } from '../../hooks/useGoals';
 import { useHabits } from '../../hooks/useHabits';
+import { useProjects } from '../../hooks/useProjects';
 import { useTasksContext } from '../../contexts/useTasksContext';
 import { getLocalDateStr } from '../../utils/date';
 import { AiBriefing } from '../AI/AiBriefing';
@@ -23,12 +24,14 @@ export function HomeDashboard({ onNavigate }: Props) {
   const goals = useGoals();
   const habits = useHabits();
   const tasks = useTasksContext();
+  const projects = useProjects();
   const [todayStr] = useState(() => getLocalDateStr());
 
   useEffect(() => {
     void goals.loadEntries();
     void habits.loadEntries();
     void tasks.loadEntries();
+    void projects.loadEntries();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -169,6 +172,21 @@ export function HomeDashboard({ onNavigate }: Props) {
             <div className={styles.cardTitle}>저널</div>
             <div className={styles.cardValue}>주간 / 월간<span className={styles.cardUnit}> 회고</span></div>
             <div className={styles.cardSub}>KPT 템플릿 포함</div>
+          </div>
+          <div className={styles.cardArrow}>›</div>
+        </div>
+
+        <div className={`${styles.card} ${styles.cardClickable}`} onClick={() => onNavigate('projects')}>
+          <div className={styles.cardIcon}>🗂️</div>
+          <div className={styles.cardContent}>
+            <div className={styles.cardTitle}>프로젝트</div>
+            <div className={styles.cardValue}>
+              {projects.entries.filter(p => p.status === '진행중').length}
+              <span className={styles.cardUnit}>개 진행중</span>
+            </div>
+            <div className={styles.cardSub}>
+              {projects.entries.length}개 전체 / 마일스톤 추적
+            </div>
           </div>
           <div className={styles.cardArrow}>›</div>
         </div>

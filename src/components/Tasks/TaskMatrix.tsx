@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useTasksContext } from '../../contexts/useTasksContext';
+import { useProjects } from '../../hooks/useProjects';
 import type { CreateTaskRequest, TaskEntry, TaskQuadrant } from '../../types';
 import { TASK_QUADRANTS } from '../../types';
 import styles from './Tasks.module.css';
@@ -22,9 +23,14 @@ interface TaskCardProps {
   task: TaskEntry;
   onComplete: (taskId: string, completed: boolean) => void;
   onDelete: (taskId: string) => void;
+  onProjectChange: (taskId: string, projectId: string) => void;
+  projectMap: Map<string, string>;
 }
 
-function TaskCard({ task, onComplete, onDelete }: TaskCardProps) {
+function TaskCard({ task, onComplete, onDelete, onProjectChange, projectMap }: TaskCardProps) {
+  const [showProjectMenu, setShowProjectMenu] = useState(false);
+  const projectName = task.projectId ? projectMap.get(task.projectId) : undefined;
+
   return (
     <div className={[styles.taskCard, task.completed ? styles.taskCompleted : ''].join(' ')}>
       <button
@@ -36,9 +42,40 @@ function TaskCard({ task, onComplete, onDelete }: TaskCardProps) {
       </button>
       <div className={styles.taskContent}>
         <div className={styles.taskTitle}>{task.title}</div>
-        {task.dueDate && <div className={styles.taskDue}>📅 {task.dueDate}</div>}
+        <div className={styles.taskMeta}>
+          {task.dueDate && <span className={styles.taskDue}>📅 {task.dueDate}</span>}
+          {projectName && (
+            <span className={styles.projectBadge} title={projectName}>🗂️ {projectName}</span>
+          )}
+        </div>
       </div>
-      <button className={styles.taskDelete} onClick={() => onDelete(task.taskId)}>✕</button>
+      <div className={styles.taskActions}>
+        <button
+          className={styles.projectLinkBtn}
+          onClick={() => setShowProjectMenu(v => !v)}
+          title="프로젝트 연결"
+        >
+          🔗
+        </button>
+        <button className={styles.taskDelete} onClick={() => onDelete(task.taskId)}>✕</button>
+      </div>
+      {showProjectMenu && (
+        <div className={styles.projectMenu}>
+          <select
+            className={styles.projectMenuSelect}
+            value={task.projectId ?? ''}
+            onChange={e => {
+              onProjectChange(task.taskId, e.target.value);
+              setShowProjectMenu(false);
+            }}
+          >
+            <option value="">프로젝트 없음</option>
+            {Array.from(projectMap.entries()).map(([id, name]) => (
+              <option key={id} value={id}>{name}</option>
+            ))}
+          </select>
+        </div>
+      )}
     </div>
   );
 }
@@ -48,9 +85,11 @@ interface QuadrantPanelProps {
   tasks: TaskEntry[];
   onComplete: (taskId: string, completed: boolean) => void;
   onDelete: (taskId: string) => void;
+  onProjectChange: (taskId: string, projectId: string) => void;
+  projectMap: Map<string, string>;
 }
 
-function QuadrantPanel({ quadrant, tasks, onComplete, onDelete }: QuadrantPanelProps) {
+function QuadrantPanel({ quadrant, tasks, onComplete, onDelete, onProjectChange, projectMap }: QuadrantPanelProps) {
   const color = QUADRANT_COLORS[quadrant.id];
   const active = tasks.filter(t => !t.completed).length;
   return (
@@ -67,7 +106,14 @@ function QuadrantPanel({ quadrant, tasks, onComplete, onDelete }: QuadrantPanelP
       <div className={styles.taskList}>
         {tasks.length === 0 && <div className={styles.emptyQuadrant}>없음</div>}
         {tasks.map(t => (
-          <TaskCard key={t.taskId} task={t} onComplete={onComplete} onDelete={onDelete} />
+          <TaskCard
+            key={t.taskId}
+            task={t}
+            onComplete={onComplete}
+            onDelete={onDelete}
+            onProjectChange={onProjectChange}
+            projectMap={projectMap}
+          />
         ))}
       </div>
     </div>
@@ -76,6 +122,7 @@ function QuadrantPanel({ quadrant, tasks, onComplete, onDelete }: QuadrantPanelP
 
 export function TaskMatrix() {
   const { entries, isSubmitting, isLoading, error, submit, loadEntries, update, remove } = useTasksContext();
+  const { entries: projects, loadEntries: loadProjects } = useProjects();
   const [title, setTitle] = useState('');
   const [urgent, setUrgent] = useState(false);
   const [important, setImportant] = useState(true);
@@ -84,7 +131,14 @@ export function TaskMatrix() {
 
   useEffect(() => {
     void loadEntries();
-  }, [loadEntries]);
+    void loadProjects();
+  }, [loadEntries, loadProjects]);
+
+  const projectMap = new Map(projects.map(p => [p.projectId, p.title]));
+
+  const handleProjectChange = (taskId: string, projectId: string) => {
+    void update(taskId, { projectId: projectId || undefined });
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -189,6 +243,8 @@ export function TaskMatrix() {
               tasks={quadrantTasks(q.id)}
               onComplete={handleComplete}
               onDelete={id => void remove(id)}
+              onProjectChange={handleProjectChange}
+              projectMap={projectMap}
             />
           ))}
         </div>

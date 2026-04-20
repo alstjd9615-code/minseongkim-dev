@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useProjects } from '../../hooks/useProjects';
+import { useTasksContext } from '../../contexts/useTasksContext';
+import { getLocalDateStr } from '../../utils/date';
 import type {
   CreateProjectRequest, ProjectEntry, ProjectMilestone,
-  ProjectStatus, ProjectTask, UpdateProjectRequest,
+  ProjectStatus, ProjectTask, TaskEntry, UpdateProjectRequest,
 } from '../../types';
 import { PROJECT_STATUSES } from '../../types';
 import styles from './Projects.module.css';
@@ -11,6 +13,31 @@ function calcProgress(entry: ProjectEntry): number {
   const tasks = entry.milestones.flatMap(m => m.tasks);
   if (tasks.length === 0) return entry.progress;
   return Math.round((tasks.filter(t => t.completed).length / tasks.length) * 100);
+}
+
+function calcMilestoneProgress(ms: ProjectMilestone): number {
+  if (ms.tasks.length === 0) return ms.status === '완료' ? 100 : 0;
+  return Math.round((ms.tasks.filter(t => t.completed).length / ms.tasks.length) * 100);
+}
+
+function getDdayLabel(dueDate: string): string {
+  const today = getLocalDateStr();
+  if (dueDate < today) {
+    const diff = Math.round((new Date(today).getTime() - new Date(dueDate).getTime()) / 86400000);
+    return `D+${diff}`;
+  }
+  if (dueDate === today) return 'D-Day';
+  const diff = Math.round((new Date(dueDate).getTime() - new Date(today).getTime()) / 86400000);
+  return `D-${diff}`;
+}
+
+function getDdayClass(dueDate: string): string {
+  const today = getLocalDateStr();
+  if (dueDate < today) return styles.ddayOverdue;
+  if (dueDate === today) return styles.ddayToday;
+  const diff = Math.round((new Date(dueDate).getTime() - new Date(today).getTime()) / 86400000);
+  if (diff <= 3) return styles.ddaySoon;
+  return styles.ddayNormal;
 }
 
 function statusClass(s: ProjectStatus) {
@@ -22,6 +49,7 @@ function statusClass(s: ProjectStatus) {
 
 export function ProjectsView() {
   const { entries, isSubmitting, isLoading, error, submit, loadEntries, update, remove } = useProjects();
+  const { entries: taskEntries, loadEntries: loadTasks } = useTasksContext();
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [status, setStatus] = useState<ProjectStatus>('계획');
@@ -31,7 +59,10 @@ export function ProjectsView() {
   const [successMsg, setSuccessMsg] = useState('');
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
-  useEffect(() => { void loadEntries(); }, [loadEntries]);
+  useEffect(() => {
+    void loadEntries();
+    void loadTasks();
+  }, [loadEntries, loadTasks]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -57,12 +88,13 @@ export function ProjectsView() {
   const handleStatusChange = (entry: ProjectEntry, s: ProjectStatus) =>
     void update(entry.projectId, { status: s });
 
-  const handleAddMilestone = (entry: ProjectEntry, msTitle: string) => {
+  const handleAddMilestone = (entry: ProjectEntry, msTitle: string, msDueDate?: string) => {
     if (!msTitle.trim()) return;
     const ms: ProjectMilestone = {
       milestoneId: crypto.randomUUID(),
       title: msTitle.trim(),
       status: '미완료',
+      dueDate: msDueDate || undefined,
       tasks: [],
     };
     const payload: UpdateProjectRequest = { milestones: [...entry.milestones, ms] };
@@ -167,20 +199,24 @@ export function ProjectsView() {
             <p>등록된 프로젝트가 없습니다.<br />첫 번째 프로젝트를 만들어보세요!</p>
           </div>
         ) : (
-          entries.map(entry => (
-            <ProjectCard
-              key={entry.projectId}
-              entry={entry}
-              isExpanded={expandedId === entry.projectId}
-              onToggleExpand={() => toggleExpand(entry.projectId)}
-              onStatusChange={s => handleStatusChange(entry, s)}
-              onDelete={() => void remove(entry.projectId)}
-              onAddMilestone={t => handleAddMilestone(entry, t)}
-              onToggleMilestone={msId => handleToggleMilestone(entry, msId)}
-              onAddTask={(msId, t) => handleAddTask(entry, msId, t)}
-              onToggleTask={(msId, taskId) => handleToggleTask(entry, msId, taskId)}
-            />
-          ))
+          entries.map(entry => {
+            const linkedTasks = taskEntries.filter(t => t.projectId === entry.projectId);
+            return (
+              <ProjectCard
+                key={entry.projectId}
+                entry={entry}
+                linkedTasks={linkedTasks}
+                isExpanded={expandedId === entry.projectId}
+                onToggleExpand={() => toggleExpand(entry.projectId)}
+                onStatusChange={s => handleStatusChange(entry, s)}
+                onDelete={() => void remove(entry.projectId)}
+                onAddMilestone={(t, d) => handleAddMilestone(entry, t, d)}
+                onToggleMilestone={msId => handleToggleMilestone(entry, msId)}
+                onAddTask={(msId, t) => handleAddTask(entry, msId, t)}
+                onToggleTask={(msId, taskId) => handleToggleTask(entry, msId, taskId)}
+              />
+            );
+          })
         )}
       </div>
     </div>
@@ -188,22 +224,26 @@ export function ProjectsView() {
 }
 
 function ProjectCard({
-  entry, isExpanded, onToggleExpand, onStatusChange, onDelete,
+  entry, linkedTasks, isExpanded, onToggleExpand, onStatusChange, onDelete,
   onAddMilestone, onToggleMilestone, onAddTask, onToggleTask,
 }: {
   entry: ProjectEntry;
+  linkedTasks: TaskEntry[];
   isExpanded: boolean;
   onToggleExpand: () => void;
   onStatusChange: (s: ProjectStatus) => void;
   onDelete: () => void;
-  onAddMilestone: (t: string) => void;
+  onAddMilestone: (t: string, dueDate?: string) => void;
   onToggleMilestone: (msId: string) => void;
   onAddTask: (msId: string, t: string) => void;
   onToggleTask: (msId: string, taskId: string) => void;
 }) {
   const [newMs, setNewMs] = useState('');
+  const [newMsDueDate, setNewMsDueDate] = useState('');
   const [taskInputs, setTaskInputs] = useState<Record<string, string>>({});
   const progress = calcProgress(entry);
+  const totalMs = entry.milestones.length;
+  const doneMs = entry.milestones.filter(m => m.status === '완료').length;
 
   return (
     <div className={styles.card}>
@@ -215,7 +255,12 @@ function ProjectCard({
           ))}
         </div>
         <div className={styles.cardTitle}>{entry.title}</div>
-        {entry.dueDate && <div className={styles.cardDate}>📅 {entry.dueDate}</div>}
+        <div className={styles.cardMeta} style={{ marginLeft: 'auto', gap: 8 }}>
+          {totalMs > 0 && (
+            <span className={styles.msSummary}>마일스톤 {doneMs}/{totalMs} 완료</span>
+          )}
+          {entry.dueDate && <div className={styles.cardDate}>📅 {entry.dueDate}</div>}
+        </div>
         <span className={styles.expandIcon}>{isExpanded ? '▲' : '▼'}</span>
       </div>
 
@@ -230,60 +275,111 @@ function ProjectCard({
 
           <div className={styles.milestoneSection}>
             <div className={styles.milestoneSectionTitle}>마일스톤 & 태스크</div>
-            {entry.milestones.map(ms => (
-              <div key={ms.milestoneId} className={styles.milestone}>
-                <div className={styles.milestoneHeader}>
-                  <span style={{ fontSize: 14 }}>{ms.status === '완료' ? '✅' : '⬜'}</span>
-                  <span className={`${styles.milestoneTitle} ${ms.status === '완료' ? styles.milestoneDone : ''}`}>{ms.title}</span>
-                  <button className={styles.milestoneToggle} onClick={() => onToggleMilestone(ms.milestoneId)}>
-                    {ms.status === '완료' ? '되돌리기' : '완료'}
-                  </button>
-                </div>
-                <div className={styles.taskList}>
-                  {ms.tasks.map(task => (
-                    <div key={task.taskId} className={styles.taskItem}>
-                      <button
-                        className={`${styles.taskCheck} ${task.completed ? styles.taskCheckDone : ''}`}
-                        onClick={() => onToggleTask(ms.milestoneId, task.taskId)}
-                      >
-                        {task.completed ? '✓' : ''}
-                      </button>
-                      <span className={`${styles.taskTitle} ${task.completed ? styles.taskTitleDone : ''}`}>{task.title}</span>
-                      {task.dueDate && <span className={styles.taskDate}>{task.dueDate}</span>}
+            {entry.milestones.length === 0 && (
+              <div className={styles.emptyMilestone}>아직 마일스톤이 없습니다. 아래에서 추가하세요.</div>
+            )}
+            {entry.milestones.map(ms => {
+              const msProgress = calcMilestoneProgress(ms);
+              return (
+                <div key={ms.milestoneId} className={styles.milestone}>
+                  <div className={styles.milestoneHeader}>
+                    <span style={{ fontSize: 14 }}>{ms.status === '완료' ? '✅' : '⬜'}</span>
+                    <span className={`${styles.milestoneTitle} ${ms.status === '완료' ? styles.milestoneDone : ''}`}>{ms.title}</span>
+                    {ms.dueDate && (
+                      <span className={`${styles.ddayBadge} ${getDdayClass(ms.dueDate)}`}>
+                        {getDdayLabel(ms.dueDate)} · {ms.dueDate}
+                      </span>
+                    )}
+                    <button className={styles.milestoneToggle} onClick={() => onToggleMilestone(ms.milestoneId)}>
+                      {ms.status === '완료' ? '되돌리기' : '완료'}
+                    </button>
+                  </div>
+                  {ms.tasks.length > 0 && (
+                    <div className={styles.msProgressWrap}>
+                      <div className={styles.msProgressBar}>
+                        <div className={styles.msProgressFill} style={{ width: `${msProgress}%` }} />
+                      </div>
+                      <span className={styles.msProgressLabel}>{msProgress}%</span>
                     </div>
-                  ))}
-                  <div className={styles.addRow}>
-                    <input
-                      className={styles.addInput}
-                      placeholder="태스크 추가..."
-                      value={taskInputs[ms.milestoneId] ?? ''}
-                      onChange={e => setTaskInputs(p => ({ ...p, [ms.milestoneId]: e.target.value }))}
-                      onKeyDown={e => {
-                        if (e.key === 'Enter') {
-                          onAddTask(ms.milestoneId, taskInputs[ms.milestoneId] ?? '');
-                          setTaskInputs(p => ({ ...p, [ms.milestoneId]: '' }));
-                        }
-                      }}
-                    />
-                    <button className={styles.addBtn} onClick={() => {
-                      onAddTask(ms.milestoneId, taskInputs[ms.milestoneId] ?? '');
-                      setTaskInputs(p => ({ ...p, [ms.milestoneId]: '' }));
-                    }}>추가</button>
+                  )}
+                  <div className={styles.taskList}>
+                    {ms.tasks.map(task => (
+                      <div key={task.taskId} className={styles.taskItem}>
+                        <button
+                          className={`${styles.taskCheck} ${task.completed ? styles.taskCheckDone : ''}`}
+                          onClick={() => onToggleTask(ms.milestoneId, task.taskId)}
+                        >
+                          {task.completed ? '✓' : ''}
+                        </button>
+                        <span className={`${styles.taskTitle} ${task.completed ? styles.taskTitleDone : ''}`}>{task.title}</span>
+                        {task.dueDate && <span className={styles.taskDate}>{task.dueDate}</span>}
+                      </div>
+                    ))}
+                    <div className={styles.addRow}>
+                      <input
+                        className={styles.addInput}
+                        placeholder="태스크 추가..."
+                        value={taskInputs[ms.milestoneId] ?? ''}
+                        onChange={e => setTaskInputs(p => ({ ...p, [ms.milestoneId]: e.target.value }))}
+                        onKeyDown={e => {
+                          if (e.key === 'Enter') {
+                            onAddTask(ms.milestoneId, taskInputs[ms.milestoneId] ?? '');
+                            setTaskInputs(p => ({ ...p, [ms.milestoneId]: '' }));
+                          }
+                        }}
+                      />
+                      <button className={styles.addBtn} onClick={() => {
+                        onAddTask(ms.milestoneId, taskInputs[ms.milestoneId] ?? '');
+                        setTaskInputs(p => ({ ...p, [ms.milestoneId]: '' }));
+                      }}>추가</button>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
-            <div className={styles.addRow}>
+              );
+            })}
+            <div className={styles.addMilestoneRow}>
               <input
                 className={styles.addInput}
                 placeholder="마일스톤 추가..."
                 value={newMs}
                 onChange={e => setNewMs(e.target.value)}
-                onKeyDown={e => { if (e.key === 'Enter') { onAddMilestone(newMs); setNewMs(''); } }}
+                onKeyDown={e => {
+                  if (e.key === 'Enter') {
+                    onAddMilestone(newMs, newMsDueDate || undefined);
+                    setNewMs('');
+                    setNewMsDueDate('');
+                  }
+                }}
               />
-              <button className={styles.addBtn} onClick={() => { onAddMilestone(newMs); setNewMs(''); }}>추가</button>
+              <input
+                type="date"
+                className={styles.addDateInput}
+                value={newMsDueDate}
+                onChange={e => setNewMsDueDate(e.target.value)}
+                title="마일스톤 마감일"
+              />
+              <button className={styles.addBtn} onClick={() => {
+                onAddMilestone(newMs, newMsDueDate || undefined);
+                setNewMs('');
+                setNewMsDueDate('');
+              }}>추가</button>
             </div>
           </div>
+
+          {linkedTasks.length > 0 && (
+            <div className={styles.linkedTasksSection}>
+              <div className={styles.milestoneSectionTitle}>연결된 태스크 ({linkedTasks.length})</div>
+              {linkedTasks.map(t => (
+                <div key={t.taskId} className={styles.linkedTaskItem}>
+                  <span className={`${styles.taskCheck} ${t.completed ? styles.taskCheckDone : ''}`}>
+                    {t.completed ? '✓' : ''}
+                  </span>
+                  <span className={`${styles.taskTitle} ${t.completed ? styles.taskTitleDone : ''}`}>{t.title}</span>
+                  {t.dueDate && <span className={styles.taskDate}>📅 {t.dueDate}</span>}
+                </div>
+              ))}
+            </div>
+          )}
 
           <div className={styles.cardActions}>
             <select
