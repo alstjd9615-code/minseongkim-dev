@@ -99,6 +99,9 @@ export function AiBriefing({ tasks, habits, goals, onNavigate }: Props) {
               : label.includes('습관') ? 'habits'
               : label.includes('목표') ? 'goals'
               : label.includes('캘린더') ? 'calendar'
+              : label.includes('집중') ? 'focus'
+              : label.includes('저널') || label.includes('회고') ? 'journal'
+              : label.includes('프로젝트') ? 'projects'
               : 'assistant';
             return (
               <button key={i} className={styles.actionLink} onClick={() => onNavigate(section)}>
