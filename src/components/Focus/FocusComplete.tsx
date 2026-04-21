@@ -28,7 +28,7 @@ export function FocusComplete({ task, cycles, onDone }: Props) {
     }
     setIsSaving(true);
     const today = getLocalDateStr();
-    await journal.submit({
+    const result = await journal.submit({
       journalType: 'kpt',
       title: `집중 완료: ${task.title}`,
       kpt: {
@@ -39,9 +39,12 @@ export function FocusComplete({ task, cycles, onDone }: Props) {
       periodStart: today,
       periodEnd: today,
     });
-    setSaved(true);
     setIsSaving(false);
-    setTimeout(onDone, 900);
+    if (result) {
+      setSaved(true);
+      setTimeout(onDone, 900);
+    }
+    // If result is null the hook already set journal.error; let the user retry or skip
   };
 
   const handleSkip = () => onDone();
@@ -83,6 +86,10 @@ export function FocusComplete({ task, cycles, onDone }: Props) {
             autoFocus
           />
         </div>
+
+        {journal.error && !isSaving && (
+          <div className={styles.errorText}>{journal.error}</div>
+        )}
 
         <div className={styles.actions}>
           <button
