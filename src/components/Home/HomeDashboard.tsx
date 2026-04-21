@@ -5,10 +5,11 @@ import { useProjects } from '../../hooks/useProjects';
 import { useTasksContext } from '../../contexts/useTasksContext';
 import { getLocalDateStr } from '../../utils/date';
 import { AiBriefing } from '../AI/AiBriefing';
-import { WeeklyReport } from '../AI/WeeklyReport';
 import { QuickAdd } from './QuickAdd';
 import { TodayTop3 } from './TodayTop3';
 import { SleepSignal } from './SleepSignal';
+import { DailyProgress } from './DailyProgress';
+import { HabitQuickCheck } from './HabitQuickCheck';
 import type { TaskEntry } from '../../types';
 import styles from './Home.module.css';
 
@@ -31,7 +32,6 @@ export function HomeDashboard({ onNavigate, onFocusTask }: Props) {
   const tasks = useTasksContext();
   const projects = useProjects();
   const [todayStr] = useState(() => getLocalDateStr());
-  const [showWeeklyReport, setShowWeeklyReport] = useState(false);
 
   useEffect(() => {
     void goals.loadEntries();
@@ -59,7 +59,6 @@ export function HomeDashboard({ onNavigate, onFocusTask }: Props) {
     return Math.max(max, streak);
   }, 0);
 
-  // Q1 태스크 (긴급+중요, 미완료)
   const q1Tasks = tasks.entries.filter(t => t.urgent && t.important && !t.completed);
   const q1Total = q1Tasks.length;
 
@@ -76,6 +75,13 @@ export function HomeDashboard({ onNavigate, onFocusTask }: Props) {
 
       <QuickAdd />
 
+      {/* Daily progress bar: Top 3 + habit dots */}
+      <DailyProgress
+        tasks={tasks.entries}
+        habits={habits.entries}
+        onNavigate={onNavigate}
+      />
+
       {/* Sleep / Recovery Signal */}
       <SleepSignal />
 
@@ -88,30 +94,19 @@ export function HomeDashboard({ onNavigate, onFocusTask }: Props) {
         onFocus={onFocusTask}
       />
 
+      {/* Habit quick-check (unchecked habits for today) */}
+      <HabitQuickCheck
+        habits={habits.entries}
+        onToggle={(habitId, date) => void habits.toggleCheck(habitId, date)}
+        onNavigate={onNavigate}
+      />
+
       <AiBriefing
         tasks={tasks.entries}
         habits={habits.entries}
         goals={goals.entries}
         onNavigate={onNavigate}
       />
-
-      {/* Weekly Report toggle */}
-      <div className={styles.weeklyReportToggle}>
-        <button
-          className={styles.weeklyToggleBtn}
-          onClick={() => setShowWeeklyReport(v => !v)}
-        >
-          📊 {showWeeklyReport ? '▾ 주간 리포트 접기' : '▸ AI 주간 리포트 보기'}
-        </button>
-      </div>
-      {showWeeklyReport && (
-        <WeeklyReport
-          tasks={tasks.entries}
-          habits={habits.entries}
-          goals={goals.entries}
-          projects={projects.entries}
-        />
-      )}
 
       <div className={styles.grid}>
         <div className={`${styles.card} ${styles.cardClickable}`} onClick={() => onNavigate('goals')}>

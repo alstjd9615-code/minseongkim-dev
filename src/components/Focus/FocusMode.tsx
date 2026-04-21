@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useTasksContext } from '../../contexts/useTasksContext';
+import { FocusComplete } from './FocusComplete';
 import type { TaskEntry } from '../../types';
 import styles from './FocusMode.module.css';
 
@@ -24,6 +25,7 @@ function FocusSession({ task, onComplete, onExit }: SessionProps) {
   const [isRunning, setIsRunning] = useState(false);
   const [phase, setPhase] = useState<'focus' | 'break'>('focus');
   const [cycles, setCycles] = useState(0);
+  const [showComplete, setShowComplete] = useState(false);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // Tick effect: count down when running
@@ -123,8 +125,9 @@ function FocusSession({ task, onComplete, onExit }: SessionProps) {
           <button
             className={styles.doneBtn}
             onClick={() => {
+              setIsRunning(false);
               void update(task.taskId, { completed: true });
-              onComplete();
+              setShowComplete(true);
             }}
             title="완료 처리"
           >
@@ -138,6 +141,14 @@ function FocusSession({ task, onComplete, onExit }: SessionProps) {
           ? '💡 지금 이 태스크 하나에만 집중하세요. 다른 생각은 나중에.'
           : '💡 잠깐 쉬고 오세요. 물 한 잔, 스트레칭.'}
       </div>
+
+      {showComplete && (
+        <FocusComplete
+          task={task}
+          cycles={cycles}
+          onDone={onComplete}
+        />
+      )}
     </div>
   );
 }
