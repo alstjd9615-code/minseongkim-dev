@@ -34,9 +34,13 @@ export function QuickAddModal({ isOpen, onClose }: Props) {
   const [dueDate, setDueDate] = useState('');
   const [projectId, setProjectId] = useState('');
   const [milestoneId, setMilestoneId] = useState('');
+  const [microStep, setMicroStep] = useState('');
+  const [timeBlockStart, setTimeBlockStart] = useState('');
+  const [timeBlockEnd, setTimeBlockEnd] = useState('');
   const [isBusy, setIsBusy] = useState(false);
   const [successMsg, setSuccessMsg] = useState('');
   const [error, setError] = useState('');
+  const [showAdvanced, setShowAdvanced] = useState(false);
 
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -51,8 +55,12 @@ export function QuickAddModal({ isOpen, onClose }: Props) {
       setDueDate('');
       setProjectId('');
       setMilestoneId('');
+      setMicroStep('');
+      setTimeBlockStart('');
+      setTimeBlockEnd('');
       setSuccessMsg('');
       setError('');
+      setShowAdvanced(false);
     }
   }, [isOpen, loadProjects]);
 
@@ -95,6 +103,9 @@ export function QuickAddModal({ isOpen, onClose }: Props) {
         dueDate: dueDate || undefined,
         projectId: projectId || undefined,
         milestoneId: milestoneId || undefined,
+        microStep: microStep.trim() || undefined,
+        timeBlockStart: timeBlockStart || undefined,
+        timeBlockEnd: timeBlockEnd || undefined,
       };
 
       const result = await submit(payload);
@@ -105,6 +116,9 @@ export function QuickAddModal({ isOpen, onClose }: Props) {
         setDueDate('');
         setProjectId('');
         setMilestoneId('');
+        setMicroStep('');
+        setTimeBlockStart('');
+        setTimeBlockEnd('');
         setUrgent(false);
         setImportant(false);
         setTimeout(() => {
@@ -207,6 +221,48 @@ export function QuickAddModal({ isOpen, onClose }: Props) {
               </select>
             )}
           </div>
+
+          {/* ── 고급 옵션 (Tiny Start / Time Block) ── */}
+          <button
+            type="button"
+            className={styles.advancedToggle}
+            onClick={() => setShowAdvanced(v => !v)}
+          >
+            {showAdvanced ? '▾' : '▸'} 고급 옵션 (2분 시작 · 타임블록)
+          </button>
+
+          {showAdvanced && (
+            <div className={styles.advancedPanel}>
+              <input
+                className={styles.microStepInput}
+                value={microStep}
+                onChange={e => setMicroStep(e.target.value)}
+                placeholder="⚡ 첫 번째 2분 행동 (예: 문서 열기, 메일 초안 작성)"
+                maxLength={120}
+                disabled={isBusy}
+              />
+              <div className={styles.timeBlockRow}>
+                <label className={styles.timeBlockLabel}>🕐 타임블록</label>
+                <input
+                  type="time"
+                  className={styles.timeInput}
+                  value={timeBlockStart}
+                  onChange={e => setTimeBlockStart(e.target.value)}
+                  title="시작 시간"
+                  disabled={isBusy}
+                />
+                <span className={styles.timeSep}>~</span>
+                <input
+                  type="time"
+                  className={styles.timeInput}
+                  value={timeBlockEnd}
+                  onChange={e => setTimeBlockEnd(e.target.value)}
+                  title="종료 시간"
+                  disabled={isBusy}
+                />
+              </div>
+            </div>
+          )}
 
           {successMsg && <div className={styles.successMsg}>{successMsg}</div>}
           {error && <div className={styles.errorMsg}>{error}</div>}

@@ -20,11 +20,13 @@ import { TaskMatrix } from './components/Tasks/TaskMatrix';
 import { JournalView } from './components/Journal/JournalView';
 import { CalendarView } from './components/Calendar/CalendarView';
 import { ProjectsView } from './components/Projects/ProjectsView';
+import { FocusMode } from './components/Focus/FocusMode';
 import { QuickAddModal } from './components/QuickAdd/QuickAddModal';
 import { QuickAddFab } from './components/QuickAdd/QuickAddFab';
+import type { TaskEntry } from './types';
 import './App.css';
 
-type Section = 'home' | 'career' | 'knowledge' | 'workout' | 'goals' | 'assistant' | 'diary' | 'dashboard' | 'lifewheel' | 'mandalart' | 'habits' | 'tasks' | 'journal' | 'calendar' | 'projects';
+type Section = 'home' | 'career' | 'knowledge' | 'workout' | 'goals' | 'assistant' | 'diary' | 'dashboard' | 'lifewheel' | 'mandalart' | 'habits' | 'tasks' | 'journal' | 'calendar' | 'projects' | 'focus';
 type CareerPage = 'portfolio' | 'blog';
 
 const SECTION_LABELS: Record<Section, string> = {
@@ -43,6 +45,7 @@ const SECTION_LABELS: Record<Section, string> = {
   journal: '📖 저널',
   calendar: '📅 캘린더',
   projects: '🗂️ 프로젝트',
+  focus: '🎯 집중 모드',
 };
 
 const ASSISTANT_CONTEXT: Record<Section, string> = {
@@ -61,6 +64,7 @@ const ASSISTANT_CONTEXT: Record<Section, string> = {
   journal: '사용자가 저널 페이지를 보고 있습니다.',
   calendar: '사용자가 캘린더 페이지에서 태스크 일정을 보고 있습니다.',
   projects: '사용자가 프로젝트 관리 페이지를 보고 있습니다.',
+  focus: '사용자가 집중 모드(포모도로)로 단일 태스크에 집중하고 있습니다.',
 };
 
 const ASSISTANT_EMPTY_TEXT: Record<Section, string> = {
@@ -79,6 +83,7 @@ const ASSISTANT_EMPTY_TEXT: Record<Section, string> = {
   journal: '회고 내용을 정리해드릴까요?\n이번 주/달을 돌아보세요.',
   calendar: '일정 계획을 도와드릴까요?\n마감일 기반으로 우선순위를 잡아드립니다.',
   projects: '프로젝트 진행 상황을 분석해드릴까요?\n마일스톤과 태스크를 정리해드립니다.',
+  focus: '집중 세션을 잘 마무리하셨나요?\n진행 상황이나 막히는 점을 말씀해주세요.',
 };
 
 // 상단 탭바에 표시할 주요 탭
@@ -127,6 +132,7 @@ function AppContent() {
   const [activeSection, setActiveSection] = useState<Section>('home');
   const [careerPage, setCareerPage] = useState<CareerPage>('portfolio');
   const [quickAddOpen, setQuickAddOpen] = useState(false);
+  const [focusTask, setFocusTask] = useState<TaskEntry | null>(null);
 
   const email = user?.signInDetails?.loginId ?? '';
   const avatarLetter = email.charAt(0).toUpperCase();
@@ -152,6 +158,11 @@ function AppContent() {
 
   const handleTabClick = (section: Section) => {
     setActiveSection(section);
+  };
+
+  const handleFocusTask = (task: TaskEntry) => {
+    setFocusTask(task);
+    setActiveSection('focus');
   };
 
   const handleCareerPageClick = (page: CareerPage) => {
@@ -214,7 +225,23 @@ function AppContent() {
           {/* 🏠 홈 */}
           {activeSection === 'home' && (
             <div className="fullPane">
-              <HomeDashboard onNavigate={(s) => setActiveSection(s as Section)} />
+              <HomeDashboard
+                onNavigate={(s) => setActiveSection(s as Section)}
+                onFocusTask={handleFocusTask}
+              />
+            </div>
+          )}
+
+          {/* 🎯 집중 모드 */}
+          {activeSection === 'focus' && (
+            <div className="fullPane">
+              <FocusMode
+                task={focusTask}
+                onComplete={() => {
+                  setActiveSection('home');
+                }}
+                onExit={() => setActiveSection('home')}
+              />
             </div>
           )}
 

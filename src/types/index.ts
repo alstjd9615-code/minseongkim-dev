@@ -395,6 +395,13 @@ export interface TaskEntry {
   dueDate?: string;
   projectId?: string;
   milestoneId?: string;
+  /** 첫 번째 작은 행동 (2분 법칙 / Tiny Start) */
+  microStep?: string;
+  /** Time Blocking: HH:MM 형식 */
+  timeBlockStart?: string;
+  timeBlockEnd?: string;
+  /** 홈 Today Top 3 고정 여부 */
+  isPinned?: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -406,6 +413,10 @@ export interface CreateTaskRequest {
   dueDate?: string;
   projectId?: string;
   milestoneId?: string;
+  microStep?: string;
+  timeBlockStart?: string;
+  timeBlockEnd?: string;
+  isPinned?: boolean;
 }
 
 export interface UpdateTaskRequest {
@@ -416,6 +427,10 @@ export interface UpdateTaskRequest {
   dueDate?: string;
   projectId?: string;
   milestoneId?: string;
+  microStep?: string;
+  timeBlockStart?: string;
+  timeBlockEnd?: string;
+  isPinned?: boolean;
 }
 
 export interface TaskListResponse {

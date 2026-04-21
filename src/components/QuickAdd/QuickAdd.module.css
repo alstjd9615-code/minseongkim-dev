@@ -263,6 +263,78 @@
 
 .fab:active { transform: scale(0.95); }
 
+/* Advanced options panel (Tiny Start / Time Block) */
+.advancedToggle {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 12px;
+  color: var(--text);
+  opacity: 0.55;
+  text-align: left;
+  padding: 0;
+  transition: opacity 0.15s;
+}
+
+.advancedToggle:hover { opacity: 0.9; }
+
+.advancedPanel {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px 12px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.microStepInput {
+  width: 100%;
+  border: 1.5px solid var(--accent-border);
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 13px;
+  background: var(--card-bg);
+  color: var(--text-h);
+  outline: none;
+  box-sizing: border-box;
+  transition: border-color 0.15s;
+}
+
+.microStepInput:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-bg); }
+.microStepInput::placeholder { color: var(--text); opacity: 0.5; }
+
+.timeBlockRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.timeBlockLabel {
+  font-size: 12px;
+  color: var(--text);
+  white-space: nowrap;
+}
+
+.timeInput {
+  border: 1.5px solid var(--border);
+  border-radius: 6px;
+  padding: 4px 8px;
+  font-size: 12px;
+  background: var(--card-bg);
+  color: var(--text-h);
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.timeInput:focus { border-color: var(--accent-border); }
+
+.timeSep {
+  font-size: 12px;
+  color: var(--text);
+  opacity: 0.5;
+}
+
 @media (max-width: 600px) {
   .fab { bottom: 72px; right: 16px; width: 48px; height: 48px; font-size: 24px; }
   .modal { margin: 0 8px; }

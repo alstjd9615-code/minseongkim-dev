@@ -85,7 +85,8 @@ function HabitCard({ habit, onToggle, onDelete }: HabitCardProps) {
   const today = todayStr();
   const checkedToday = habit.checkDates.includes(today);
   const streak = calcStreak(habit.checkDates);
-  const totalDays = Math.ceil((Date.now() - new Date(habit.createdAt).getTime()) / 86400000) || 1;
+  const createdTime = new Date(habit.createdAt).getTime();
+  const totalDays = Math.ceil((new Date(today).getTime() + 86400000 - createdTime) / 86400000) || 1;
   const completionRate = Math.round((habit.checkDates.length / totalDays) * 100);
 
   return (

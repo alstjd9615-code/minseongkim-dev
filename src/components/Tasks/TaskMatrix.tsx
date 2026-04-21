@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useTasksContext } from '../../contexts/useTasksContext';
 import { useProjects } from '../../hooks/useProjects';
+import { getLocalDateStr } from '../../utils/date';
 import type { CreateTaskRequest, TaskEntry, TaskQuadrant } from '../../types';
 import { TASK_QUADRANTS } from '../../types';
 import styles from './Tasks.module.css';
@@ -19,17 +20,29 @@ function getQuadrant(urgent: boolean, important: boolean): TaskQuadrant {
   return 'Q4';
 }
 
+function getDeadlineStatus(dueDate?: string): 'overdue' | 'today' | 'soon' | null {
+  if (!dueDate) return null;
+  const today = getLocalDateStr();
+  if (dueDate < today) return 'overdue';
+  if (dueDate === today) return 'today';
+  const diff = (new Date(dueDate).getTime() - new Date(today).getTime()) / 86400000;
+  if (diff <= 3) return 'soon';
+  return null;
+}
+
 interface TaskCardProps {
   task: TaskEntry;
   onComplete: (taskId: string, completed: boolean) => void;
   onDelete: (taskId: string) => void;
   onProjectChange: (taskId: string, projectId: string) => void;
+  onPin: (taskId: string, isPinned: boolean) => void;
   projectMap: Map<string, string>;
 }
 
-function TaskCard({ task, onComplete, onDelete, onProjectChange, projectMap }: TaskCardProps) {
+function TaskCard({ task, onComplete, onDelete, onProjectChange, onPin, projectMap }: TaskCardProps) {
   const [showProjectMenu, setShowProjectMenu] = useState(false);
   const projectName = task.projectId ? projectMap.get(task.projectId) : undefined;
+  const dl = getDeadlineStatus(task.dueDate);
 
   return (
     <div className={[styles.taskCard, task.completed ? styles.taskCompleted : ''].join(' ')}>
@@ -42,14 +55,41 @@ function TaskCard({ task, onComplete, onDelete, onProjectChange, projectMap }: T
       </button>
       <div className={styles.taskContent}>
         <div className={styles.taskTitle}>{task.title}</div>
+        {task.microStep && (
+          <div className={styles.microStepRow}>⚡ {task.microStep}</div>
+        )}
         <div className={styles.taskMeta}>
-          {task.dueDate && <span className={styles.taskDue}>📅 {task.dueDate}</span>}
+          {task.dueDate && (
+            <span className={[
+              styles.taskDue,
+              dl === 'overdue' ? styles.dueOverdue : '',
+              dl === 'today' ? styles.dueToday : '',
+              dl === 'soon' ? styles.dueSoon : '',
+            ].join(' ')}>
+              {dl === 'overdue' && '⛔ '}
+              {dl === 'today' && '🔥 '}
+              {dl === 'soon' && '⏰ '}
+              📅 {task.dueDate}
+            </span>
+          )}
+          {task.timeBlockStart && (
+            <span className={styles.timeBlockBadge}>
+              🕐 {task.timeBlockStart}{task.timeBlockEnd ? `~${task.timeBlockEnd}` : ''}
+            </span>
+          )}
           {projectName && (
             <span className={styles.projectBadge} title={projectName}>🗂️ {projectName}</span>
           )}
         </div>
       </div>
       <div className={styles.taskActions}>
+        <button
+          className={[styles.pinBtn, task.isPinned ? styles.pinBtnActive : ''].join(' ')}
+          onClick={() => onPin(task.taskId, !task.isPinned)}
+          title={task.isPinned ? 'Top 3 해제' : 'Top 3 고정'}
+        >
+          📌
+        </button>
         <button
           className={styles.projectLinkBtn}
           onClick={() => setShowProjectMenu(v => !v)}
@@ -86,10 +126,11 @@ interface QuadrantPanelProps {
   onComplete: (taskId: string, completed: boolean) => void;
   onDelete: (taskId: string) => void;
   onProjectChange: (taskId: string, projectId: string) => void;
+  onPin: (taskId: string, isPinned: boolean) => void;
   projectMap: Map<string, string>;
 }
 
-function QuadrantPanel({ quadrant, tasks, onComplete, onDelete, onProjectChange, projectMap }: QuadrantPanelProps) {
+function QuadrantPanel({ quadrant, tasks, onComplete, onDelete, onProjectChange, onPin, projectMap }: QuadrantPanelProps) {
   const color = QUADRANT_COLORS[quadrant.id];
   const active = tasks.filter(t => !t.completed).length;
   return (
@@ -112,6 +153,7 @@ function QuadrantPanel({ quadrant, tasks, onComplete, onDelete, onProjectChange,
             onComplete={onComplete}
             onDelete={onDelete}
             onProjectChange={onProjectChange}
+            onPin={onPin}
             projectMap={projectMap}
           />
         ))}
@@ -138,6 +180,10 @@ export function TaskMatrix() {
 
   const handleProjectChange = (taskId: string, projectId: string) => {
     void update(taskId, { projectId: projectId || undefined });
+  };
+
+  const handlePin = (taskId: string, isPinned: boolean) => {
+    void update(taskId, { isPinned });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -244,6 +290,7 @@ export function TaskMatrix() {
               onComplete={handleComplete}
               onDelete={id => void remove(id)}
               onProjectChange={handleProjectChange}
+              onPin={handlePin}
               projectMap={projectMap}
             />
           ))}

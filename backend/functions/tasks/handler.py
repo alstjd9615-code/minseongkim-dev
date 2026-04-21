@@ -121,6 +121,21 @@ def handler(event: dict[str, Any], context: Any) -> dict[str, Any]:  # noqa: ARG
         if milestone_id:
             item["milestoneId"] = milestone_id
 
+        micro_step: str = str(body.get("microStep", "")).strip()
+        if micro_step:
+            item["microStep"] = micro_step
+
+        time_block_start: str = str(body.get("timeBlockStart", "")).strip()
+        if time_block_start:
+            item["timeBlockStart"] = time_block_start
+
+        time_block_end: str = str(body.get("timeBlockEnd", "")).strip()
+        if time_block_end:
+            item["timeBlockEnd"] = time_block_end
+
+        if "isPinned" in body:
+            item["isPinned"] = bool(body["isPinned"])
+
         table = dynamodb.Table(TASKS_TABLE)
         try:
             table.put_item(Item=item)
@@ -191,6 +206,25 @@ def handler(event: dict[str, Any], context: Any) -> dict[str, Any]:  # noqa: ARG
             mid = str(body["milestoneId"]).strip()
             update_expressions.append("milestoneId = :milestoneId")
             expr_attr_values[":milestoneId"] = mid
+
+        if "microStep" in body:
+            ms = str(body["microStep"]).strip()
+            update_expressions.append("microStep = :microStep")
+            expr_attr_values[":microStep"] = ms
+
+        if "timeBlockStart" in body:
+            tbs = str(body["timeBlockStart"]).strip()
+            update_expressions.append("timeBlockStart = :timeBlockStart")
+            expr_attr_values[":timeBlockStart"] = tbs
+
+        if "timeBlockEnd" in body:
+            tbe = str(body["timeBlockEnd"]).strip()
+            update_expressions.append("timeBlockEnd = :timeBlockEnd")
+            expr_attr_values[":timeBlockEnd"] = tbe
+
+        if "isPinned" in body:
+            update_expressions.append("isPinned = :isPinned")
+            expr_attr_values[":isPinned"] = bool(body["isPinned"])
 
         # Recalc quadrant if urgency/importance changed
         urgent_new = body.get("urgent")
